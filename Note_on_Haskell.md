@@ -71,10 +71,10 @@ newtype Hm a = Hm {getValue :: a}
 ##Reuse type class
 Make a type class be subclass of another type class.
 ```Haskell
-class (Eq a) => Num a where
+class Eq a => Num a where
   -- required behaviour for a Num
 ```
-If ```a``` is ```Num```, it will also be ```Eq```.  i.e ```Num``` is ```Eq```
+If ```a``` is ```Num```, it should also be ```Eq```.  i.e ```Num``` is ```Eq```
 
 Type class is used for function declaration, not for data type declaration.  To make a data type be the type class, the type class instance should be defined accordingly.  In some conditions, a type class instance can be defined by re-using another type class instance.  E.g.
 ```Haskell
@@ -159,6 +159,19 @@ instance Functor' ((->) a) where
   fmap' = (.)
 ```
 
+###4. Data declaration with constraint
+Type constraints usually happen on functions.  Sometimes it also happens on a data constructor.  Suppose you want to construct a type by using a type argument where this type belongs to a type class.  E.g.
+```Haskell
+data WeakenFactor a => Weaken a = Weaken { weakenFactor :: a, weakenHealth :: Health }
+```
+That means `a` must belong to type class `WeakenFactor`.
+
+Alternatively, it can be presented as a function as follows:
+```Haskell
+{-# LANGUAGE GADTs #-}  -- this pragama is needed
+data Weaken a where -- starts with data, like class
+  Weaken :: WeakenFactor a => a -> Health -> Weaken a
+```
 
 
 
