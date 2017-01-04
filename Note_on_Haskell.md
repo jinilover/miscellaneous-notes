@@ -173,5 +173,4 @@ data Weaken a where -- starts with data, like class
   Weaken :: WeakenFactor a => a -> Health -> Weaken a
 ```
 
-
-
+https://wiki.haskell.org/Data_declaration_with_constraint
