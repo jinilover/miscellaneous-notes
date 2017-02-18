@@ -174,3 +174,18 @@ data Weaken a where -- starts with data, like class
 ```
 
 https://wiki.haskell.org/Data_declaration_with_constraint
+
+###5. `RecordWildCards` for `{..}` on data constructor having record syntax
+This is for code simplicity.  E.g.
+```Haskell
+{-# LANGUAGE RecordWildCards #-}
+data Stage = Egg { stateChgdTime :: UTCTime,
+                   currTemp :: Int ,  -- notice currTemp
+                   energyToHatch :: Int,
+                   health :: Health }
+...
+process Egg{..} _ (_, Just IncreaseTemp) allConsts
+  | currTemp == (fatalMaxTemp . eggConsts) allConsts = -- currTemp is called directly
+    return "The egg has reached the max temperature, you've cooked it"
+```
+By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
