@@ -24,32 +24,20 @@ ghci> :t sum
 sum :: Num a => [a] -> a
 ```
 
-##Remember to specify the data type but NOT the value in type signature
-This is trivial.  But a type constructor and a value constructor using the same name might make a beginner make a mistake by specifying a value in a type signature.
+##Pay attention when the name of type constructor and value constructor are the same
+People new to FP usually have this mistake.  In defining an ADT, a type constructor and a value constructor have the same name.
 
-Consider the following example
-```Haskell
-data Bool = False | True
-```
-An type signature uses ```Bool```
-```Haskell
-isOdd :: Int -> Bool
-isOdd x = x `mod` 2 == 1
-```
-```Bool``` is the **type**.  Therefore it is put in the function's type signature.
-
-Similarly, consider the following example
+Example
 ```Haskell
 data Vector a = Vector a a a deriving (Show)
 ```
-```Vector a``` is the **type**.  Therefore, ```Vector a```, **not** ```Vector a a a```, is put in the function's type signature of the following example.
+`Vector a` is the **type**, `Vector aaa` is the **value**.  Therefore, `Vector a` but **not** ```Vector a a a``` should be put in the function's type signature.
 ```Haskell
 vplus :: (Num t) => Vector t -> Vector t -> Vector t
 (Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
 ```
-```Vector t```, a **type**, is put in the type signature.  ```Vector i j k```, a **value**, is put in the function implementation.
 
-##Why sometimes ```newtype``` is used instead of ```data```?
+##`newtype` is sometimes used instead of `data`?
 For a given type, if there is only 1 value constructor which only contains 1 field.  Key word ```newtype``` can be used instead of ```data```.
 Example.
 ```Haskell
