@@ -1,8 +1,8 @@
-#Note on some ML basics
+# Note on some ML basics
 ML is a research subject.  This note only records some important points. ML algorithms are divided into supervised learning and unsupervised learning.
-##Mathematics pre-requisite
+## Mathematics pre-requisite
 The mathematics knowledge is linear algebra (matrix product) and calculus (differentiation).
-##Supervised Learning
+## Supervised Learning
 There is a set of **actual data** providing some kind of expected values.  These data is used to train the algorithm to predict a value.  These kinds of algorithms are classified as supervised learning.  
 The training steps are:
 * Splitting the actual data into training data and validation data, the ratio is ~ 3:1.
@@ -23,17 +23,17 @@ The parameters can be represented by the following vector annotated by **W**:
 w0 w1 w2
 The label can be represented by the following vector annotated by **Y**:
 Therefore by matrix dot product ```X * W = Y```
-###Cost function
+### Cost function
 From the previous, there is difference between the actual ```Y``` values from the calculated ```X * W```.  Cost function is the mean of the square of the difference across the whole training data set.  To minimize the error, **W** should be selected appropriately.
-###Gradient descent
+### Gradient descent
 It is an iterative algorithm to find the optimum **W**.  It involves taking the differentiation of the cost function against W (gradient).  In each iteration, subtracts the gradient from the W for a new W' to calculate the cost function value.  Repeat the step until the minimum cost function value is found.
 ### Linear classification
 Supervised learning.  The algorithm is used to decide the classified type.  Logistic regression is a particular type of linear classification in which there are 2 types to be classified.  E.g. determing whether an email is spam or not.
-###Underfitting, Overfitting and regularization
+### Underfitting, Overfitting and regularization
 Underfitting means the algorithm's determined values is largely deviated from the actual data.  Overfitting is the opposite.  But the problem is the algorithm only fits to the training data.  A large error is found when it is validated against the validation set.  Therefore regularization is used to penalize the equation such that it is more general to fit in both training and validation.
-##Unsupervised Learning 
+## Unsupervised Learning 
 Unlike supervised learning, there is no expected values from the data.  The algorithm is used to find the trend in the given data.  Examples of these algorithms are clustering, dimensionality reducation and PCA.
-##BigData
+## BigData
 To train the algorithm to be more accurate, a huge data set is needed.  Therefore ML drives the need of technologies that handle BigData.
-##Spark
+## Spark
 Spark has a MLlib for training the algorithm such as ```LinearRegressionWithSGD```, ```LogisticRegressionWithSGD```.

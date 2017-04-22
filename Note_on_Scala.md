@@ -1,7 +1,7 @@
-#Note on Scala
+# Note on Scala
 Sometimes it is hard to classify whether a feature belongs to FP or specific to Scala.  Therefore I made a section here.
 
-##Using Scala Stream
+## Using Scala Stream
 ```Stream``` implements lazy lists where elements are evaluated only when they are needed.  This uses the memory more efficiently.  But using ```Stream``` can also result in out of memory problem.  Once an item is evaluated, memory will be allocated to hold it.  To discard an element after evaluation, don't use a reference to hold a ```Stream```.  E.g. 
 ```scala
 scala> def stream: Stream[String] = file.getLines.toStream
@@ -16,7 +16,7 @@ A reference ```S``` holds the stream.  Therefore it holds all the evaluated item
 
 An alternative solution is using ```iterator``` on the ```Stream``` to evaluate the items.
 
-##Using Future in an Actor application
+## Using Future in an Actor application
 In Scala, ```Future``` is implemented as a Monad.  Different Monads have different behaviours to serve different purposes.
 
 There is something interesting about ```Future``` as a Monad.  It is a placeholder for a function result that will be available at some point in the future.  In an Actor application, it is common that a ```var``` is used to maintain the Actor state.  In some scenarios, a ```Future``` is used together with this Actor where a function is performed inside the Future.  Under this condition, it should be careful in using this ```var```.  For example,
@@ -138,7 +138,7 @@ In the above example, the actor inserts a record to database when it receives a 
 
 **Never use ```var``` directly inside a ```Future```**.
 
-##Using => in different scenarios to achieve different purposes
+## Using => in different scenarios to achieve different purposes
 **=>** is used in 3 scenarios which apparently look similar but actually is for different purpose.
 Scenario 1
 ```Scala

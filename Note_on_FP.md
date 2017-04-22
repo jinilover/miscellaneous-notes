@@ -1,25 +1,25 @@
-#Note on FP
+# Note on FP
 It summarizes the key ideas that I think is important when working on FP.  
 * I was not major in mathematics.  My perception on the mathematical idea behind FP may not be strictly correct.
 * I am new to Haskell.  However, since Haskell is a pure FP language, the FP concept can be understood correctly and more easily using this language.  Therefore I will use Haskell to illustrate the FP concept and then the approach adopted by Scala.
 
-##What is Functional programming (FP)
+## What is Functional programming (FP)
 It is programming in terms of mathematical functions.  Therefore unlike imperative programming, FP incurs no side effect because mathematical functions are simply expressions that produce no side effect.
 
-##Type is important
+## Type is important
 A mathematical function is proven to be valid only if the argument type is known.  Similarly, the FP code is guranteed to be safe if the expression type is known in compile time http://learnyouahaskell.com/types-and-typeclasses.  Therefore a safe type system is crucial to FP.
 
-##Fundamental concepts in FP
+## Fundamental concepts in FP
 
-###What is a value, a type and a kind?
+### What is a value, a type and a kind?
 e.g. 1 and 2 are **values**.  Both of them belong to the same **type** called ```Integer```.
 "a" and "b" are **values**.  Both of them belong to another **type** called ```String```.  
 ```Integer``` and ```String``` are different **types**.  However, both of them are **types**, therefore both ```Integer``` and ```String``` are the same **kind**.  Later on it will know that a **type** is not the only **kind**.  A **type constructor** is a **kind**.  A **higher kinded type** is another kind **kind**.
 
-###What is type constructor?
+### What is type constructor?
 As its name implies, it is a constructor that constructs a type.  That is, it constructs a type by reciving a type(s) as arguments.  A **type constructor** is another **kind**.
 
-####*Type constructor in Haskell*
+#### *Type constructor in Haskell*
 A type constructor can have 0..n type arguments.  A type constructor hasn't a type argument is just a type.  E.g.
 ```Haskell
 data Bool = True | False
@@ -34,7 +34,7 @@ data Either a b  =  Left a | Right b
 ```
 In Haskell convention, type variables are written in lower cases.
 
-####*Type constructor in Scala*
+#### *Type constructor in Scala*
 E.g. ```List``` is a type constructor.  It constructs a type ```List[Int]``` when receiving a type argument ```Int```.  A type constructor should be **declared** using an underscore, ```T[_]```, o.w. it is impossible to know ```T``` is a type constructor. But a type constructor should be **referred to** w/o underscore.  This is analogous to declaring and referring to a variable where a type is needed in declaring a variable but the type should be omitted when referring a variable.  Example of declaring and referring to type constructor,
 ```Scala
 object SampleObject {
@@ -48,7 +48,7 @@ SampleObject.apply[List, Int]
 ```
 ```List``` is a type constructor, ```Int``` is a type.  They satisfy the function argument types requirement.  Please note that ```List``` is passed (aka referred to) without using an underscore.
 
-####*Value or data constructor in Haskell*
+#### *Value or data constructor in Haskell*
 A value constructor can have 0..n arguments.  E.g.
 ```Haskell
 data Maybe a = Nothing | Just a
@@ -57,10 +57,10 @@ data Maybe a = Nothing | Just a
 * ```Maybe``` is a **type constructor**
 * ```Nothing``` and ```Just``` are **data or value constructors**.
 
-###Kind
+### Kind
 As illustrated before, ```Int``` and  ```String``` are different **types**.  But both of them are **types**.  Therefore they are the same **kind**.  ```Option``` and ```List``` are different **type constructors**.  But they are **type constructors**.  Therefore they are the same **kind**.  And ```Int``` and ```Option``` are different **kinds** because a **type** and a **type constructor** are different **kinds**.
 
-####*Kind in Haskell*
+#### *Kind in Haskell*
 In ghci, the kind of a type can be checked by the command ```:k```
 
 ```Haskell
@@ -87,13 +87,13 @@ Monad :: (* -> *) -> Constraint
 ```
 This time the kind is ```(* -> *) -> Constraint```
 
-####*Kind in Scala*
+#### *Kind in Scala*
 Similar ideas are conveyed in Scala.  E.g. 
 * ```List[_]``` and ```Option[_]``` are of the same kind ```* -> *```.  
 * ```Map[_, _]``` and ```Function1[_, _]``` are of the same kind ```* -> * -> *```.
 * ```Functor[F[_]]``` and ```Monad[M[_]]``` are of the same kind ```(* -> *) -> *```.
 
-###Higher kinded type
+### Higher kinded type
 In the previous examples, there is a kind look like ```(* -> *) -> ...```.  Notice the parentheses.  It looks like a higher-order function such as ```filter :: (a -> Bool) -> [a] -> [a]```.  This is called a higher kinded type.  Higher kinded types are type constructors that take type constructor as argument to constructor a new type. http://raichoo.blogspot.com.au/2011/07/from-functions-to-monads-in-scala.html.  
 For example, ```FoldMappable``` is a higher kinded type
 ```Scala
@@ -108,7 +108,7 @@ Summary:
 * ```List```, ```[]```, ```Maybe``` belong to the same **kind** because they are **type constructors** represented by ```* -> *```
 * ```Functor```, ```Applicative```, ```Monad``` belong to the same **kind** because they are **higher kinded types** represented by ```(* -> *) -> *```
 
-###Type class
+### Type class
 A type class is an interface that defines some behaviour.  When a type is a **part** of a type class, this type supports the behaviour defined by this type class.  A type class is not the same as a class or interface in the OO world.
 Consider the following Haskell function ```(==)```:
 ```Haskell
@@ -117,7 +117,7 @@ Consider the following Haskell function ```(==)```:
 ```
 That means, to be able to use the function ```(==)```, the type of the 2 arguments should support the behaviour of the type class ```Eq```.  Alternative speaking, ```Eq``` is the class constraint on the function ```(==)``` arguments.
 
-####*How to use type class in Haskell*
+#### *How to use type class in Haskell*
 Suppose I want to define a function ```plus``` that operates on 2 arguments whose types should be part of type class ```Number```, type class ```Number``` should be defined as:
 ```Haskell
 class Number a where
@@ -130,7 +130,7 @@ instance Number Integer where
 ```
 Please note that the ```plus``` implementation detail is not important.  After implementing ```Integer``` as part of ```Number```, I can use ```plus```  to operate on 2 integers as, say, ```plus 1 2``` which behaves according to the ```plus``` implementation in ```instance Number Integer```
 
-####*How to use type class in Scala*
+#### *How to use type class in Scala*
 Scala is a JVM language.  It does not have this inborn type class feature as in a pure FP language.  To implement this feature, ```trait``` is used.
 ```Scala
 trait Number[A] {
@@ -155,23 +155,23 @@ def sum[A: Number](a1: A, a2: A): A = implicitly[Number[A]].plus(a1, a2)
 ```
 ```[A: Number]``` is known as a **context bound**.  It states that ```Number``` is a type class for ```A``` whose ```Number[A]``` instance is implicitly imported to make ```implicitly[Number[A]]``` work.
 
-####*Type class vs OO polymorphism*
+#### *Type class vs OO polymorphism*
 As mentioned before, a type class is neither a class nor interface as in the OO world. 
 * OO's polymorphism is about class inheritance or interface implementation.  Type class is about **parametric polymorphism**.
 * OO's polymorphism considers from a **class**/**interface**'s point of view.  Therefore ```plus``` will be declared on the interface as ```def plus(a: A): A``` and thus implemented on the class as ```def plus(i: Int): Int = blah```
 * Type class considers from a **function**'s point of view.  ```plus``` is a **standalone** function that operates on arguments of required type class.  The type that implements the required type class behaviour defines how ```plus``` behaves when operating on arguments of this type.
 
-####*Type class is important in FP*
+#### *Type class is important in FP*
 The example illustrates how to use a type class to define the behaviour of a type.  A type class is not limited to defining the behaviour of types but other kinds as well.  E.g. type class ```Functor``` defines the behaviour for a type constructor such as ```Maybe```.  Therefore type class is very important for defining many useful abstractions.
 
-##Useful abstractions
+## Useful abstractions
 
-###Monoid
+### Monoid
 There is a number of types that can be "added" and an identity element which give out the following laws:
 * The element "addition" is associative
 * The "addition" of an element to an identity element results in the same element
 
-####*Monoid in Haskell*
+#### *Monoid in Haskell*
 ```Haskell
 class Monoid a where
 	mempty :: a
@@ -194,7 +194,7 @@ mappend [1,2,3] [3,4,5]
 [1,2,3,3,4,5]
 ```
 
-####*Monoid in Scala*
+#### *Monoid in Scala*
 ```Scala
 trait Monoid[A] {
   def mzero: A
@@ -249,18 +249,18 @@ def foldMap[A, B: Monoid](it: List[A])(f: (A) => B): B =
 	}
 ```
 
-####*Note about Monoid*
+#### *Note about Monoid*
 * Monoid is a type class that defines class constraint for a **type**.  This can be understood according to the Monoid definition.  E.g. a Monoid instance can be defined for a type ```List[A]``` but not for a type constructor ```List```.
 * In the Scala implementation, trait ```Monoid``` and ```implicit``` are means to help to define an Monoid instance for, say, ```List[Int]```.  The reason is Scala is not a pure FP language.   It doesn't have an inborn type class feature.  Therefore in terms of FP terminology, ```List[Int]``` is the Monoid, ```Monoid[List[Int]]``` is just a means to make ```List[Int]``` a monoid.
 
-###Functor
+### Functor
 Suppose 
 * There is a function or morphism ```f: A => B```.
 * There is a type constructor ```F[_]```.
 
 If there is a morphism that manipulates type ```A``` (where ```A``` can be Int, String, ...) in the first category and there is a transformed morphism that manipulates the transformed type ```F[A]``` (i.e. F[Int], F[String], ...) in the second category, then this transformation ```F[_]``` is a **functor**.
 
-####*Functor in Haskell*
+#### *Functor in Haskell*
 ```Haskell
 class Functor f where
     fmap :: (a -> b) -> f a -> f b
@@ -276,7 +276,7 @@ fmap (\x -> x * 2) [1,2,3]
 [2,4,6]
 ```
 
-####*Functor in Scala*
+#### *Functor in Scala*
 ```Scala
 trait Functor[F[_]] {
     def map[A,B](x : F[A])(f: A=>B) : F[B]
@@ -303,31 +303,31 @@ import scalaz.std.list._  // import implicit Functor[List] instance
 Functor[List].map(List('a', 'b', 'c'))(_.toUpper)
 ```
 
-####*The 2 Functor laws*
+#### *The 2 Functor laws*
 The laws are illustrated in Haskell only.  The Scala counterparts can be imagined correspondingly.
 
-#####*Law 1 - Identity*
+##### *Law 1 - Identity*
 ```Hasekll
 fmap id = id
 ```
 where ```id``` is the identity function.
 
-#####*Law 2 - Composition*
+##### *Law 2 - Composition*
 ```Hasekll
 fmap f . fmap g = fmap (f . g)
 ```
 
-####*Note about Functor*
+#### *Note about Functor*
 * A functor is a type class that defines class constraint for a **type constructor**.
 * Similar to Monoid, in the Scala implementation, ```List``` is the Functor, not the ```Functor[List]``` instance.
 * A functor is also the morphism of functions between categories.  The reason is a functor maps a function of ```A => B``` (```A``` and ```B``` belongs to 1 category) to another function of ```F[A] => F[B]``` (where ```F[A]``` and ```F[B]``` belongs to another category).
 
-###Monad
+### Monad
 A Monad is a Functor.  It has 2 more functions
 * point or return
 * bind or >>=
 
-####*Monad in Haskell*
+#### *Monad in Haskell*
 ```Haskell
 class Monad m where
     return :: a -> m a
@@ -348,7 +348,7 @@ To test it
 [2,4,6]
 ```
 
-####*do-notation in Haskell*
+#### *do-notation in Haskell*
 do-notation is a syntactic sugar to improve readability on using ```>>=``` and lambdas.
 Example
 ```Haskell
@@ -364,7 +364,7 @@ foldl (\z -> \x ->
     ) (Just 0) [Just 2, Just 3, Just (-1)]
 ```
 
-####*Monad in Scala*
+#### *Monad in Scala*
 ```Scala
 trait Monad[M[_]] {
 	def point[A](value: A): M[A]
@@ -435,15 +435,15 @@ def foldMapM[A, B: Monoid, M[_] : Monad](it: List[A])(f: A => M[B]): M[B] =
     }
 ```
 
-####*Note about Monad*
+#### *Note about Monad*
 * A monad is a type class that defines class constraint for a **type constructor**.
 * Monads are more commonly used than Functors.  The reason is ```bind```  or ```>>=``` enables sequencing computation.  That is, the function inside ```bind``` is ```A => M[B]``` and ```M[B]``` is the result of another monadic operation.
 * Scala's for-notation is similar to Haskell's do-notation.  The slight difference is ```yield``` should be used together with ```for``` such that the value inside ```yield``` should be a value be wrapped by the Monad.  In ```do``` notation, there is nothing analogous to ```yield```.  The last expression should be a Monad to be returned from this do-notation expression.
 
-###Applicative
+### Applicative
 An applicative is a functor.  A monad is an applicative.  It has the function <*> or ap.
 
-####*Applicative in Haskell*
+#### *Applicative in Haskell*
 ```Haskell
 class Applicative m where 
     (<*>) :: m (a -> b) -> m a -> m b
@@ -482,7 +482,7 @@ Again, it can be re-written using Monad function ```>>=``` as follows
 (,) <$> Just 3 >>= (<$> Just True)
 ```
 
-####*Applicative in Scala*
+#### *Applicative in Scala*
 ```Scala
 trait Applicative[F[_]] {
   def ap[A, B](value: F[A])(func: => F[A => B]): F[B]
@@ -530,20 +530,20 @@ def optionSequencing_ap[T](optA: Option[T], optB: Option[T], optC: Option[T])(f:
 ```
 In this scenario, I can see using Applicative is more flexible than using Monad.
 
-####*The 4 Applicative laws*
+#### *The 4 Applicative laws*
 The laws are illustrated in Haskell only.  The Scala counterparts can be imagined easily.
 
-#####*Law 1 - Identity*
+##### *Law 1 - Identity*
 ```Hasekll
 pure id <*> a = a
 ```
 
-#####*Law 2 - Homomorphism*
+##### *Law 2 - Homomorphism*
 ```Haskell
 pure f <*> pure a = pure $ f a
 ```
 
-#####*Law 3 - Interchange*
+##### *Law 3 - Interchange*
 ```Haskell
 f <*> pure a = pure ($ a) <*> f
 ```
@@ -552,7 +552,7 @@ f <*> pure a = pure ($ a) <*> f
 ```pure (\f -> f a) <*> f``` can be simplified as
 ```pure ($ a) <*> f```
 
-#####*Law 4 - Composition*
+##### *Law 4 - Composition*
 ```Haskell
 pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
 ```
@@ -574,13 +574,13 @@ Considering the types of u, v and w, ```u <*> (v <*> w) :: f c```, therefore
 pure (.) <*> u <*> v <*> w :: u <*> (v <*> w) :: f c
 ```
 
-####*Note about Applicative*
+#### *Note about Applicative*
 * An applicative is a type class that defines class constraint for a **type constructor**.
 * As illustrated in the 2 Haskell examples, they can be implemented using monad.  Using applicative makes the code simpler.  It is the reason why applicative is used in the scenarios when a function is enclosed inside a monad.
 
-##Design Patterns
+## Design Patterns
 
-###Free monad
+### Free monad
 The idea is making a sequencing computation where this sequence is called "AST".  This "AST" is presented in the form of executing Free Monads in sequence via flatMap/map or for-exp.  Each sequenced Free Monad only declares what should be done.  Maybe that's why it's "Free".  How to fill in the business logic for the Free Monads is left to the "interpreter".  This is analogous to the polymorphism in the OO design.
 In Scalaz, a Free Monad looks like
 ```Scala
@@ -590,7 +590,7 @@ Free[F[_], A]
 
 Here a good example of learning Free Monad.  https://github.com/kenbot/free/blob/master/src/main/scala/kenbot/free/KVS.scala
 
-####"AST" duties - what should be done
+#### "AST" duties - what should be done
 In the example, the sequence of executing the Free Monads, or called "script", is
 ```Scala
 val script: Free[KVS, Unit] = for {
@@ -630,7 +630,7 @@ The ```Functor[KVS]``` implementation is pretty straight forward, there will be 
 
 We have identitified what tasks should be done in the form of Free Monads and the sequence of executing them.  The implementation of these Free Monads and the concrete type of ```Next``` are left to the "interpreter".
 
-####"Interpreter" duties - how to do it
+#### "Interpreter" duties - how to do it
 An interepreter is responsible to fill in the Free Monad business logic and drive the sequenced Free Monads.  Scalaz provides different ways to fill in the business logic such as ```Free.resume.fold``` (which involves recursion), ```Free.runFC(script)(naturalTransformation``` and many other ways.  This example uses ```Free.resume.fold``` that implements the Free Monad as follows:
 ```Scala
 def interpretPure(kvs: Script[Unit], table: Map[String, String] = Map.empty): Map[String, String] = kvs.resume.fold({
@@ -644,7 +644,7 @@ The interpreter also defines the concrete data type for ```Next```.  According t
 * ```Unit``` in ```Put[Next](key: String, value: String, next: Next)```
 * ```Unit``` in ```Delete[Next](key: String, next: Next)```
 
-####Recap
+#### Recap
 There are different ways to implement Free Monad using Scalaz.  The basic steps are:
 * Identifying the tasks to be executed, that is, identifying the ADTs in the form of a functor hierarchy.
 * Lifting these functors to Free Monads
@@ -655,7 +655,7 @@ There are different ways to implement Free Monad using Scalaz.  The basic steps 
 
 https://github.com/jinilover/scalaForFun/tree/master/src/main/scala/battleship illustrates how to use ```Coyoneda[KVS, A]``` (to save the boilerplate of creating a ```Functor[KVS]``` instance) and Natural transformation to fill in the Free Monad business logic.
 
-####Free Monad internal mechanism
+#### Free Monad internal mechanism
 I don't completely understand how Free Monad works.  The features I am sure is:
 * A Free Monad is a monad.  Therefore it should have ```flatMap``` and ```map``` defined.
 * In defining an ```Functor[_]``` instance, the func ```f: A => B``` is the key that makes the Free Monad sequencing work via for-exp (or flatMap/map).

@@ -1,7 +1,7 @@
-#Note on Haskell
+# Note on Haskell
 Some personal note in learning Haskell.
 
-##Using a type signature to tell if a function is pure or not
+## Using a type signature to tell if a function is pure or not
 A function is pure such that its result only depends on the provided input.  To tell if a function is pure or not, use ```:type```.  If the result type prefixes with ```IO```, this function is impure.  E.g.
 ```
 ghci> :type readFile
@@ -9,7 +9,7 @@ readFile :: FilePath -> IO String
 ```
 This IO monad allows you to build any "impure" task such as database update.
 
-##Polymorphic functions
+## Polymorphic functions
 Functions that have type variables are called polymorphic functions.  E.g.
 ```
 ghci> :t head
@@ -17,14 +17,14 @@ head :: [a] -> a
 ```
 ```a``` is a type variable.  That means ```head``` is a polymorphic function that works on a list of any element types.
 
-##Overloaded functions
+## Overloaded functions
 Polymorphic functions having the type variables constrainted by type class.  E.g.
 ```
 ghci> :t sum
 sum :: Num a => [a] -> a
 ```
 
-##Pay attention when the name of type constructor and value constructor are the same
+## Pay attention when the name of type constructor and value constructor are the same
 People new to FP usually have this mistake.  In defining an ADT, a type constructor and a value constructor have the same name.
 
 Example
@@ -37,7 +37,7 @@ vplus :: (Num t) => Vector t -> Vector t -> Vector t
 (Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
 ```
 
-##`newtype` is sometimes used instead of `data`?
+## `newtype` is sometimes used instead of `data`
 For a given type, if there is only 1 value constructor which only contains 1 field.  Key word ```newtype``` can be used instead of ```data```.
 Example.
 ```Haskell
@@ -56,7 +56,7 @@ newtype Hm a = Hm a
 newtype Hm a = Hm {getValue :: a}
 ```
 
-##Reuse type class
+## Reuse type class
 Make a type class be subclass of another type class.
 ```Haskell
 class Eq a => Num a where
@@ -74,10 +74,10 @@ To make ```Maybe m``` be a type class ```Eq```, it should require ```m``` be a t
 (+) :: Num a => a -> a -> a
 ```
 
-##Pragmas
+## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
-###1. `forall` and RankNTypes
+### 1. `forall` and RankNTypes
 There is a good explanation in http://sleepomeno.github.io/blog/2014/02/12/Explaining-Haskell-RankNTypes-for-all/
 
 E.g.
@@ -96,14 +96,14 @@ applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
 applyToTuple = \f -> \(x, y) -> (f x, f y)
 ```
 
-####Reason
+#### Reason
 Type signature’s type variables are **implicitly** universally quantified by an **invisible** `forall` section.  Therefore ```applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)``` is actually compiled to ```applyToTuple :: forall a b c. ([a] -> Int) -> ([b], [c]) -> (Int, Int)```
 
 Therefore the type checker expects type variables a, b and c to be different concrete types.  So ```[a] -> Int``` might become ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever after a function is passed to ```applyToTuple```.  ```(f x, f y)``` seeks to apply that function to two lists of different types – however, any version of that function, i.e. ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever, expects its list to always be of 1 concrete type only.
 
 If it's re-written as ```applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)``` which is compiled to ```applyToTuple :: forall b c. (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)```, (```a``` and ```b```) or (```a``` and ```c```) will be in **different scopes**.  ```a``` is therefore only 1 type thoughout that function ```[a] -> Int```.  Then this function can be passed any list type.
 
-###2. `GeneralizedNewtypeDeriving` - make a type class derivable
+### 2. `GeneralizedNewtypeDeriving` - make a type class derivable
 Suppose there is a type class from which an instance has been created for a type.  If there is a newtype contains this type and we want to reuse this type class instance for this newtype, we can use the pragma ```GeneralizedNewtypeDeriving```.
 Example
 ```Haskell
@@ -118,7 +118,7 @@ instance TooMany Int where
 newtype Goats = Goats Int deriving (Eq, Show, TooMany)
 ```
 
-###3. `InstanceSigs` - allows type signature in defining the type class instance
+### 3. `InstanceSigs` - allows type signature in defining the type class instance
 In defining the type class instance, it is unnecessary and not allowed to write the function type signature.  E.g.
 ```Haskell
 class Functor' f where
@@ -147,7 +147,7 @@ instance Functor' ((->) a) where
   fmap' = (.)
 ```
 
-###4. Data declaration with constraint
+### 4. Data declaration with constraint
 Type constraints usually happen on functions.  Sometimes it also happens on a data constructor.  Suppose you want to construct a type by using a type argument where this type belongs to a type class.  E.g.
 ```Haskell
 data WeakenFactor a => Weaken a = Weaken { weakenFactor :: a, weakenHealth :: Health }
@@ -163,7 +163,7 @@ data Weaken a where -- starts with data, like class
 
 https://wiki.haskell.org/Data_declaration_with_constraint
 
-###5. `RecordWildCards` for `{..}` on data constructor having record syntax
+### 5. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
 ```Haskell
 {-# LANGUAGE RecordWildCards #-}
