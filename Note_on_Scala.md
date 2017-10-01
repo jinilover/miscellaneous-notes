@@ -1,6 +1,83 @@
 # Note on Scala
 Sometimes it is hard to classify whether a feature belongs to FP or specific to Scala.  Therefore I made a section here.
 
+## Anonymous type
+A type defined inside `{}` without a name.  Examples:
+* `{ def getName: String }` is a type having the function `def getName: String`.
+* `{ type T[A] = Map[Int, A] }` is a type having a type alias.
+
+References:
+* https://tomlee.co/2007/11/anonymous-type-acrobatics-with-scala/
+* https://underscore.io/blog/posts/2016/12/05/type-lambdas.html
+
+## Use of `#`
+`#` enables us to refer to a nested class without restricting it to a particular instance of its enclosing class.  E.g.
+```Scala
+class A {
+  class B
+
+  def f(b: B) = println("Got my B!")
+  def g(b: A#B) = println("Got a B.")
+}
+```
+Therefore
+```Scala
+scala> val a1 = new A
+a1: A = A@1497b7b1
+
+scala> val a2 = new A
+a2: A = A@2607c28c
+
+scala> a2.f(new a1.B)
+<console>:11: error: type mismatch;
+ found   : a1.B
+ required: a2.B
+              a2.f(new a1.B)
+                   ^
+
+scala> a2.g(new a1.B)
+Got a B.
+```
+It can see that there's no `A.B`, but there's `A#B`.
+Side track note: `def f(b: B)` relates to a topic of dependant path type.
+
+## Type lambdas
+Partially applied type is inherently supported in Haskell.  To solve this problem in Scala, there is type lambda that makes use of `#`.  E.g.
+```Scala
+({ type T[A] = Map[Int, A] })#T
+```
+
+Example of problem adopting partially applied type - function as functor instance
+```Haskell
+instance Functor ((->) r) where
+  fmap = (.)
+```
+
+To implement the instance in Scala by using type lambda.
+```Scala
+trait Functor [F[_]] {
+  def fmap[A, B](f: A => B)(fa: F[A]): F[B]
+}
+
+implicit def functionFunctor[A] = new Functor[({ type F[B] = A => B })#F] {
+  def fmap[B, C](f: B => C)(fa: A => B) =
+    f compose fa
+}
+```
+
+## Kind projector
+A simpler syntax than the type lambda.
+```Scala
+implicit def functionFunctor[A] = new Functor[A => ?] {
+  def fmap[B, C](f: B => C)(fa: A => B) =
+    f compose fa
+}
+```
+
+Kind projector is a compiler plugin https://github.com/non/kind-projector
+
+Reference on type lambdas and kind project https://underscore.io/blog/posts/2016/12/05/type-lambdas.html
+
 ## Using Scala Stream
 ```Stream``` implements lazy lists where elements are evaluated only when they are needed.  This uses the memory more efficiently.  But using ```Stream``` can also result in out of memory problem.  Once an item is evaluated, memory will be allocated to hold it.  To discard an element after evaluation, don't use a reference to hold a ```Stream```.  E.g. 
 ```scala
@@ -140,7 +217,8 @@ In the above example, the actor inserts a record to database when it receives a 
 
 ## Using => in different scenarios to achieve different purposes
 **=>** is used in 3 scenarios which apparently look similar but actually is for different purpose.
-Scenario 1
+
+### Scenario 1
 ```Scala
 trait Generator[+T] {
   blah => // an alias for ”this”.
@@ -151,7 +229,8 @@ trait Generator[+T] {
 }
 ```
 ```blah``` refers to the instance outside ```map```.  If ```f(this.generate)``` is used, it will point to the ```new Generate[S]instance```.
-Scenario 2
+
+### Scenario 2
 ```Scala
 trait BoxOfficeCreator { this: Actor =>
   def createBoxOffice:ActorRef = {
@@ -168,7 +247,8 @@ class RestApi extends HttpService
   // ...
 }
 ```
-Scenario 3
+
+### Scenario 3
 Regarding ```RestApi```, it can be implemented as
 ```Scala
 class RestApi extends HttpService

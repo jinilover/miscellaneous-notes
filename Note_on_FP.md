@@ -158,13 +158,14 @@ def sum[A: Number](a1: A, a2: A): A = implicitly[Number[A]].plus(a1, a2)
 #### *Type class vs OO polymorphism*
 As mentioned before, a type class is neither a class nor interface as in the OO world. 
 * OO's polymorphism is about class inheritance or interface implementation.  Type class is about **parametric polymorphism**.
-* OO's polymorphism considers from a **class**/**interface**'s point of view.  Therefore ```plus``` will be declared on the interface as ```def plus(a: A): A``` and thus implemented on the class as ```def plus(i: Int): Int = blah```
-* Type class considers from a **function**'s point of view.  ```plus``` is a **standalone** function that operates on arguments of required type class.  The type that implements the required type class behaviour defines how ```plus``` behaves when operating on arguments of this type.
+* In OOP polymorphism, **instance.method** behaviour is determined by instance runtime
+implementation.
+* In Type class, **function(a)** behaviour is determined by argument type of **a**
 
 #### *Type class is important in FP*
 The example illustrates how to use a type class to define the behaviour of a type.  A type class is not limited to defining the behaviour of types but other kinds as well.  E.g. type class ```Functor``` defines the behaviour for a type constructor such as ```Maybe```.  Therefore type class is very important for defining many useful abstractions.
 
-## Useful abstractions
+## 4 commonly used type classes
 
 ### Monoid
 There is a number of types that can be "added" and an identity element which give out the following laws:
@@ -577,6 +578,38 @@ pure (.) <*> u <*> v <*> w :: u <*> (v <*> w) :: f c
 #### *Note about Applicative*
 * An applicative is a type class that defines class constraint for a **type constructor**.
 * As illustrated in the 2 Haskell examples, they can be implemented using monad.  Using applicative makes the code simpler.  It is the reason why applicative is used in the scenarios when a function is enclosed inside a monad.
+
+## Other type classes
+### MonadPlus
+Similar to **Monoid**.  But **MonadPlus** is for a type constructor.
+```Haskell
+class Monoid a where
+	mempty :: a
+	mappend :: a -> a -> a
+```
+
+```Haskell
+class Monad m => MonadPlus m where
+  mzero :: m a
+  mplus :: m a -> m a -> m a
+```
+
+Taking `Maybe` as an example, therefore the difference is
+```Haskell
+instance (Monoid a) => Monoid (Maybe a) where
+  mempty = Nothing
+  mappend m Nothing = m
+  mappend Nothing m = m
+  mappend (Just x) (Just y) = Just $ mappend x y
+```
+
+```Haskell
+instance MonadPlus Maybe where
+  mzero = Nothing
+  mplus x Nothing = x
+  mplus Nothing y = y
+  mplus x _ = y
+```
 
 ## Design Patterns
 
