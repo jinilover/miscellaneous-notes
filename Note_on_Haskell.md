@@ -177,3 +177,41 @@ process Egg{..} _ (_, Just IncreaseTemp) allConsts
     return "The egg has reached the max temperature, you've cooked it"
 ```
 By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
+
+## Thinking
+This part is more on thinking base on minimum knowledge - solving FP problems by composing funtions via connecting the types.
+
+### 1. `Traversable`
+2 main functions:
+* `traverse :: Applicative f => (a -> f b) -> t a -> f (t b)`
+* `sequenceA :: Applicative f => t (f a) -> f (t a)`
+
+This problem comes from the purple book.
+```
+data Query = Query
+data SomeObj = SomeObj
+data IoOnlyObj = IoOnlyObj
+data Err = Err
+
+decodeFn = undefined :: String -> Either Err SomeObj
+
+fetchFn = undefined :: Query -> IO [String]
+
+makeIoOnlyObj = undefined :: [SomeObj] -> IO [(SomeObj, IoOnlyObj)]
+
+pipelineFn :: Query -> IO (Either Err [(SomeObj, IoOnlyObj)])
+pipelineFn = undefined
+```
+
+Purpose is to implement `pipelineFn`
+
+Solve by types, approach:
+* starting from `fetchFn`, and `fetchFn`, `decodeFn`, `makeIoOnlyObj` can be "connected" with each other.
+* Suppose `:t query` is `Query`
+* `:t fetchFn query` is `IO [String]`
+* `[]` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query` is `IO (Either Err [SomeObj])`
+* `IO` is `Monad`, `makeIoOnlyObj` returns `IO`, `Either a` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query >>= (traverse makeIoOnlyObj)` is `IO (Either Err [(SomeObj, IoOnlyObj)])`.  Done!
+* `fetchFn query` is `IO` and `traverse makeIoOnlyObj` returns `IO`, the implemenation can be re-written as `fetchFn query >>= (traverse makeIoOnlyObj . traverse decodeFn)`
+* To take out the `query` for a point-free style, it can be re-written as `(>>= traverse makeIoOnlyObj . traverse decodeFn) . fetchFn`
+
+
