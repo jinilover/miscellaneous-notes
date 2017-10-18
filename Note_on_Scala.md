@@ -59,8 +59,8 @@ trait Functor [F[_]] {
   def fmap[A, B](f: A => B)(fa: F[A]): F[B]
 }
 
-implicit def functionFunctor[A] = new Functor[({ type F[B] = A => B })#F] {
-  def fmap[B, C](f: B => C)(fa: A => B) =
+implicit def functionFunctor[R] = new Functor[({ type F[A] = R => A })#F] {
+  def fmap[A, B](f: A => B)(fa: R => A): R => B =
     f compose fa
 }
 ```
@@ -68,8 +68,8 @@ implicit def functionFunctor[A] = new Functor[({ type F[B] = A => B })#F] {
 ## Kind projector
 A simpler syntax than the type lambda.
 ```Scala
-implicit def functionFunctor[A] = new Functor[A => ?] {
-  def fmap[B, C](f: B => C)(fa: A => B) =
+implicit def functionFunctor[R] = new Functor[R => ?] {
+  def fmap[A, B](f: A => B)(fa: R => A): R => B =
     f compose fa
 }
 ```
