@@ -1,5 +1,82 @@
-# Note on Haskell
-Some personal note in learning Haskell.
+# Note on Haskell/FP
+Some personal note in learning Haskell or thinking FP
+
+## Mostly thinking or derivation, minimum knowledge
+
+### 1. `(.)`
+Inspired by the "applicative" chapter in the purple book.  Consider the following **pseudo code**   
+`g :: b -> c`  then  
+`g . :: (a3 -> b) -> a3 -> c` s.t. `g . f` where `f :: a3 -> b`  then  
+`(g .) . :: (a2 -> a3 -> b) -> a2 -> a3 -> c` s.t. `g . f` where `f :: a2 -> a3 -> b` then  
+`((g .) .) . :: (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c` s.t. `g . f` where `f :: a1 -> a2 -> a3 -> b`  
+
+Recap **pseudo code**,  
+```
+  g         ::                    b  ->                   c
+  g .       ::             (a3 -> b) ->             a3 -> c
+ (g .) .    ::       (a2 -> a3 -> b) ->       a2 -> a3 -> c
+((g .) .) . :: (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
+```
+
+#### Factor out `g` to point free styles
+Base on the **types** of the previous summary, there is another derivation
+
+`g .` is  
+`(.) g` is  
+`(.) :: (b -> c) -> (a3 -> b) -> a3 -> c`  
+
+`(g .) .` is  
+`((.) g) . ` is  
+`(.) ((.) g)` is  
+`(.).(.) $ g` is  
+`(.).(.) :: (b -> c) -> (a2 -> a3 -> b) -> a2 -> a3 -> c`  
+
+`((g .) .) . ` is  
+`((.).(.) $ g) .` is  
+`(.) ((.).(.) $ g)` is  
+`(.).(.).(.) $ g` is  
+`(.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c`
+
+Recap  
+```
+(.)         :: (b -> c) ->             (a3 -> b) ->             a3 -> c
+(.).(.)     :: (b -> c) ->       (a2 -> a3 -> b) ->       a2 -> a3 -> c
+(.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
+```
+
+### 2. `Traversable`
+2 main functions:
+* `traverse :: Applicative f => (a -> f b) -> t a -> f (t b)`
+* `sequenceA :: Applicative f => t (f a) -> f (t a)`
+
+This problem comes from the purple book.
+```
+data Query = Query
+data SomeObj = SomeObj
+data IoOnlyObj = IoOnlyObj
+data Err = Err
+
+decodeFn = undefined :: String -> Either Err SomeObj
+
+fetchFn = undefined :: Query -> IO [String]
+
+makeIoOnlyObj = undefined :: [SomeObj] -> IO [(SomeObj, IoOnlyObj)]
+
+pipelineFn :: Query -> IO (Either Err [(SomeObj, IoOnlyObj)])
+pipelineFn = undefined
+```
+
+Purpose is to implement `pipelineFn`
+
+Solve by types, approach:
+* starting from `fetchFn`, and `fetchFn`, `decodeFn`, `makeIoOnlyObj` can be "connected" with each other.
+* Suppose `:t query` is `Query`
+* `:t fetchFn query` is `IO [String]`
+* `[]` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query` is `IO (Either Err [SomeObj])`
+* `IO` is `Monad`, `makeIoOnlyObj` returns `IO`, `Either a` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query >>= (traverse makeIoOnlyObj)` is `IO (Either Err [(SomeObj, IoOnlyObj)])`.  Done!
+* `fetchFn query` is `IO` and `traverse makeIoOnlyObj` returns `IO`, the implemenation can be re-written as `fetchFn query >>= (traverse makeIoOnlyObj . traverse decodeFn)`
+* To take out the `query` for a point-free style, it can be re-written as `(>>= traverse makeIoOnlyObj . traverse decodeFn) . fetchFn`
+
 
 ## Using a type signature to tell if a function is pure or not
 A function is pure such that its result only depends on the provided input.  To tell if a function is pure or not, use ```:type```.  If the result type prefixes with ```IO```, this function is impure.  E.g.
@@ -177,41 +254,3 @@ process Egg{..} _ (_, Just IncreaseTemp) allConsts
     return "The egg has reached the max temperature, you've cooked it"
 ```
 By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
-
-## Thinking
-This part is more on thinking base on minimum knowledge - solving FP problems by composing funtions via connecting the types.
-
-### 1. `Traversable`
-2 main functions:
-* `traverse :: Applicative f => (a -> f b) -> t a -> f (t b)`
-* `sequenceA :: Applicative f => t (f a) -> f (t a)`
-
-This problem comes from the purple book.
-```
-data Query = Query
-data SomeObj = SomeObj
-data IoOnlyObj = IoOnlyObj
-data Err = Err
-
-decodeFn = undefined :: String -> Either Err SomeObj
-
-fetchFn = undefined :: Query -> IO [String]
-
-makeIoOnlyObj = undefined :: [SomeObj] -> IO [(SomeObj, IoOnlyObj)]
-
-pipelineFn :: Query -> IO (Either Err [(SomeObj, IoOnlyObj)])
-pipelineFn = undefined
-```
-
-Purpose is to implement `pipelineFn`
-
-Solve by types, approach:
-* starting from `fetchFn`, and `fetchFn`, `decodeFn`, `makeIoOnlyObj` can be "connected" with each other.
-* Suppose `:t query` is `Query`
-* `:t fetchFn query` is `IO [String]`
-* `[]` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query` is `IO (Either Err [SomeObj])`
-* `IO` is `Monad`, `makeIoOnlyObj` returns `IO`, `Either a` is `Traversable`, therefore `:t traverse decodeFn <$> fetchFn query >>= (traverse makeIoOnlyObj)` is `IO (Either Err [(SomeObj, IoOnlyObj)])`.  Done!
-* `fetchFn query` is `IO` and `traverse makeIoOnlyObj` returns `IO`, the implemenation can be re-written as `fetchFn query >>= (traverse makeIoOnlyObj . traverse decodeFn)`
-* To take out the `query` for a point-free style, it can be re-written as `(>>= traverse makeIoOnlyObj . traverse decodeFn) . fetchFn`
-
-
