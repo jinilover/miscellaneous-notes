@@ -44,7 +44,31 @@ Recap
 (.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
 ```
 
-### 2. `Traversable`
+### 2. Setter
+This is inspired by the lens derivation note.  Suppose  
+```
+mapOnTraversable :: Traversable t => (a -> b) -> t a -> t b
+mapOnTraversable f = runIdentity . traverse (Identity . f)
+```
+
+If the data structure is not `Traversable`, we replace `traverse` by another function, say, `setter` such that  
+`mapBySetter setter f = runIdentity . setter (Identity . f)` is  
+`mapBySetter setter f = (runIdentity . ) setter (Identity . f)` is  
+`mapBySetter setter f = (runIdentity . ) . setter . (Identity . ) $ f` is
+`mapBySetter setter = (runIdentity . ) . setter . (Identity . )`  
+Because  
+`(Identity . ) :: (a1 -> a2) -> a1 -> Identity a2`  
+`(runIdentity . ) :: (a -> Identity c) -> a -> c`  
+Therefore  
+`setter :: (a1 -> Identity a2) -> a -> Identity c`  
+`mapBySetter :: ((a1 -> Identity a2) -> a -> Identity c) -> (a1 -> a2) -> a -> c`  
+rewritten as  
+`mapBySetter :: Setter s t a b -> (a -> b) -> s -> t`  
+where  
+`type Setter s t a b = (a -> Identity b) -> s -> Identity t`  
+
+
+### 3. `Traversable`
 2 main functions:
 * `traverse :: Applicative f => (a -> f b) -> t a -> f (t b)`
 * `sequenceA :: Applicative f => t (f a) -> f (t a)`
@@ -240,7 +264,33 @@ data Weaken a where -- starts with data, like class
 
 https://wiki.haskell.org/Data_declaration_with_constraint
 
-### 5. `RecordWildCards` for `{..}` on data constructor having record syntax
+### 5. Generalized Algebraic Data Types (GADTs)
+GADT can be used to solve the problem mentioned before.  
+
+If we want to define a data constructor in the following way, notice the double colons.
+```
+data Expr a where
+  I   :: Expr Int
+```
+GADTs extension should be enabled.  
+
+If we want to use smart constructor, it can also apply GADT
+```
+data Expr a where
+  I   :: Int  -> Expr Int
+  B   :: Bool -> Expr Bool
+  Add :: Expr Int -> Expr Int -> Expr Int
+  Mul :: Expr Int -> Expr Int -> Expr Int
+  Eq  :: Eq a => Expr a -> Expr a -> Expr Bool
+```
+
+In this case, GADT makes use of phantom type but it's more type safe than phantom type because e.g. 
+```
+I 1 `Eq` B True
+``` 
+will raise compilation error because `a` can track the type.  For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
+
+### 6. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
 ```Haskell
 {-# LANGUAGE RecordWildCards #-}
