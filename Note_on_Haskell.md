@@ -1,7 +1,7 @@
 # Note on Haskell/FP
 Some personal note in learning Haskell or thinking FP
 
-## Mostly thinking or derivation, minimum knowledge
+## Mostly thinking or derivation, minimum FP knowledge
 
 ### 1. `(.)`
 Inspired by the "applicative" chapter in the purple book.  Consider the following **pseudo code**   
@@ -42,6 +42,21 @@ Recap
 (.)         :: (b -> c) ->             (a3 -> b) ->             a3 -> c
 (.).(.)     :: (b -> c) ->       (a2 -> a3 -> b) ->       a2 -> a3 -> c
 (.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
+```
+
+#### Altervative (simpler) way to find the types
+Because
+```
+(.) :: (b -> c) -> (a -> b) -> a -> c
+```
+Therefore in `(.).(.)`, to compose with the 2nd `(.)`, the 1st `(.)` must be `((a -> b) -> a -> c) -> ???`.  
+
+Comparing the first arguments of both `(.)`s,   
+`((a -> b) -> a -> c)` is analogous to `(b -> c)`, substituting `a` by `a1`, `b` by `(a -> b)`, `c` by `a -> c`,  
+`???` is `(a1 -> a -> b) -> a1 -> a -> c`, tidy up the variables, it is `(a1 -> a2 -> b) -> a1 -> a2 -> c`
+
+```
+(.).(.) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 ```
 
 ### 2. Setter
@@ -304,3 +319,28 @@ process Egg{..} _ (_, Just IncreaseTemp) allConsts
     return "The egg has reached the max temperature, you've cooked it"
 ```
 By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
+
+### 7. `ViewPatterns`
+Enable simple syntax to match a pattern that requires another function to process.  E.g.
+```
+{-# LANGUAGE ViewPatterns #-}
+import qualified Data.Text as T
+
+f :: T.Text -> Either String T.Text
+f (T.splitOn ":" -> [_, _]) = Right undefined
+f s = Left "input string must be s1:s2 format"
+```
+The benefit is applied on
+```
+(T.splitOn ":" -> [_, _])
+```
+Because
+```
+T.splitOn ":" :: T.Text -> [T.Text]
+```
+
+Note:
+* The value to be matched doesn't need to be specified
+* Parentheses must be neede
+
+
