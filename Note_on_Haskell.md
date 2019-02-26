@@ -341,6 +341,71 @@ T.splitOn ":" :: T.Text -> [T.Text]
 
 Note:
 * The value to be matched doesn't need to be specified
-* Parentheses must be neede
+* Parentheses must be needed
+
+### 8. `FunctionalDependencies`
+It is used on multiple parameter type classes.  
+E.g. `class Monad m => MonadError e m | m -> e where`, `m` determines `e`, it means for a given `m` value, it should be related to at most one `e` value in the `MonadError` type class.  E.g. when `instance MonadError IOException IO where` is defined, `instance MonadError String IO where` will get compilation error.
+
+Another easy example comes from https://www.schoolofhaskell.com/school/to-infinity-and-beyond/pick-of-the-week/type-families-and-pokemon.
+
+Suppose there are 3 types of pokemons - `Fire`, `Water`, `Grass` and 3 types of pokemon moves - `FireMove`, `WaterMove`, `GrassMove` such that 
+```
+data Fire = Charmander | Charmeleon | Charizard
+data Water = Squirtle | Wartortle | Blastoise
+data Grass = Bulbasaur | Ivysaur | Venusaur
+
+data FireMove = Ember | FlameThrower | FireBlast
+data WaterMove = Bubble | WaterGun
+data GrassMove = VineWhip
+```
+
+At this stage, we can tell `Fire` is related to `FireMove` only and so on.  Suppose we want to define a function to get a move from a pokemon, we can define a type class as follows:
+```
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
+
+class Pokemon pokemon move | pokemon -> move where
+  pickMove :: pokemon -> move
+
+instance Pokemon Fire FireMove where
+    pickMove Charmander = Ember
+    pickMove Charmeleon = FlameThrower
+    pickMove Charizard = FireBlast
+
+instance Pokemon Water WaterMove where
+    pickMove Squirtle = Bubble
+    pickMove _ = WaterGun
+
+instance Pokemon Grass GrassMove where
+    pickMove = const VineWhip
+```
+Meaningless relationship such as `instance Pokemon Fire WaterMove` won't pass the compilation.
+
+### 9. `TypeFamilies`
+Besides `FunctionalDependencies`, `TypeFamilies` is an alternative to type check the pokemon example.
+```
+{-# LANGUAGE TypeFamilies #-}
+class Pokemon pokemon where
+  data Move pokemon :: *
+  pickMove :: pokemon -> Move pokemon
+
+instance Pokemon Fire where
+  data Move Fire = Ember | FlameThrower | FireBlast
+  pickMove Charmander = Ember
+  pickMove Charmeleon = FlameThrower
+  pickMove Charizard = FireBlast
+
+instance Pokemon Water where
+  data Move Water = Bubble | WaterGun
+  pickMove Squirtle = Bubble
+  pickMove _ = WaterGun
+
+instance Pokemon Grass where
+  data Move Grass = VineWhip
+  pickMove = const VineWhip
+```
+
+Comparing with `FunctionalDependencies`, `TypeFamilies` seems a bit less trivial in the beginning, however it has the advantages of less type parameter.
+
 
 
