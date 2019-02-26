@@ -407,5 +407,9 @@ instance Pokemon Grass where
 
 Comparing with `FunctionalDependencies`, `TypeFamilies` seems a bit less trivial in the beginning, however it has the advantages of less type parameter.
 
+References: 
+* https://www.schoolofhaskell.com/school/to-infinity-and-beyond/pick-of-the-week/type-families-and-pokemon.
+* http://www.mchaver.com/posts/2017-06-21-type-families.html
+
 
 
