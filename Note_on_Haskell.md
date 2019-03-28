@@ -117,6 +117,26 @@ Solve by types, approach:
 * To take out the `query` for a point-free style, it can be re-written as `(>>= traverse makeIoOnlyObj . traverse decodeFn) . fetchFn`
 
 
+## `IORef`, `STRef`
+Both achive mutability in side-effect free manner using different means.
+
+### `IORef`
+`IORef` provides mutable value in `IO` monad.  As the name implies, it's reference to some data that allows functions to change this data and these functions must operate in `IO`.  That is, the data can only be modified by going through `IO`.
+
+### `STRef`
+`STRef` provdes mutable value in `ST` monad where the mutable memory is only used internally, i.e. the functions must be operate in `ST`.
+
+References:
+* https://wiki.haskell.org/Monad/ST
+* https://stackoverflow.com/questions/5545517/difference-between-state-st-ioref-and-mvar?rq=1
+
+## `MVar`
+`MVar` is used for multi threading, i.e. `MVar a` is used to pass information between threads.  As analogy, it can be regarded as `IORef` with locks.
+
+References:
+* https://riptutorial.com/haskell/example/15506/communicating-between-threads-with--mvar-
+
+
 ## Using a type signature to tell if a function is pure or not
 A function is pure such that its result only depends on the provided input.  To tell if a function is pure or not, use ```:type```.  If the result type prefixes with ```IO```, this function is impure.  E.g.
 ```
