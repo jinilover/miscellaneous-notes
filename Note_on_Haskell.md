@@ -239,7 +239,27 @@ Therefore the type checker expects type variables a, b and c to be different con
 
 If it's re-written as ```applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)``` which is compiled to ```applyToTuple :: forall b c. (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)```, (```a``` and ```b```) or (```a``` and ```c```) will be in **different scopes**.  ```a``` is therefore only 1 type thoughout that function ```[a] -> Int```.  Then this function can be passed any list type.
 
-### 2. `GeneralizedNewtypeDeriving` - make a type class derivable
+### 2. `forall` and `ExistentialQuantification`
+In this case `forall` is used on defining a type.  E.g. 
+```
+data SomeException = forall e . Exception e => SomeException e
+```
+Usually it's an error because any type variable appearing on the right must also appear on the left.  It can be fixed by
+```
+data SomeException e = SomeException e
+```
+However if `e` always belongs to a type class, say, `Exception`, then all functions using `SomeException` should be declared in this way
+```
+func :: Exception e => SomeException e
+```
+Using existential types solves this problem.
+```
+{-# LANGUAGE ExistentialQuantification #-}
+data SomeException = forall e. Exception e => SomeException e
+func :: SomeException
+```
+
+### 3. `GeneralizedNewtypeDeriving` - make a type class derivable
 Suppose there is a type class from which an instance has been created for a type.  If there is a newtype contains this type and we want to reuse this type class instance for this newtype, we can use the pragma ```GeneralizedNewtypeDeriving```.
 Example
 ```Haskell
@@ -254,7 +274,7 @@ instance TooMany Int where
 newtype Goats = Goats Int deriving (Eq, Show, TooMany)
 ```
 
-### 3. `InstanceSigs` - allows type signature in defining the type class instance
+### 4. `InstanceSigs` - allows type signature in defining the type class instance
 In defining the type class instance, it is unnecessary and not allowed to write the function type signature.  E.g.
 ```Haskell
 class Functor' f where
@@ -283,7 +303,7 @@ instance Functor' ((->) a) where
   fmap' = (.)
 ```
 
-### 4. Data declaration with constraint
+### 5. Data declaration with constraint
 Type constraints usually happen on functions.  Sometimes it also happens on a data constructor.  Suppose you want to construct a type by using a type argument where this type belongs to a type class.  E.g.
 ```Haskell
 data WeakenFactor a => Weaken a = Weaken { weakenFactor :: a, weakenHealth :: Health }
@@ -299,7 +319,7 @@ data Weaken a where -- starts with data, like class
 
 https://wiki.haskell.org/Data_declaration_with_constraint
 
-### 5. Generalized Algebraic Data Types (GADTs)
+### 6. Generalized Algebraic Data Types (GADTs)
 GADT can be used to solve the problem mentioned before.  
 
 If we want to define a data constructor in the following way, notice the double colons.
@@ -325,7 +345,7 @@ I 1 `Eq` B True
 ``` 
 will raise compilation error because `a` can track the type.  For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
 
-### 6. `RecordWildCards` for `{..}` on data constructor having record syntax
+### 7. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
 ```Haskell
 {-# LANGUAGE RecordWildCards #-}
@@ -340,7 +360,7 @@ process Egg{..} _ (_, Just IncreaseTemp) allConsts
 ```
 By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
 
-### 7. `ViewPatterns`
+### 8. `ViewPatterns`
 Enable simple syntax to match a pattern that requires another function to process.  E.g.
 ```
 {-# LANGUAGE ViewPatterns #-}
@@ -363,7 +383,7 @@ Note:
 * The value to be matched doesn't need to be specified
 * Parentheses must be needed
 
-### 8. `FunctionalDependencies`
+### 9. `FunctionalDependencies`
 It is used on multiple parameter type classes.  
 E.g. `class Monad m => MonadError e m | m -> e where`, `m` determines `e`, it means for a given `m` value, it should be related to at most one `e` value in the `MonadError` type class.  E.g. when `instance MonadError IOException IO where` is defined, `instance MonadError String IO where` will get compilation error.
 
@@ -401,7 +421,7 @@ instance Pokemon Grass GrassMove where
 ```
 Meaningless relationship such as `instance Pokemon Fire WaterMove` won't pass the compilation.
 
-### 9. `TypeFamilies`
+### 10. `TypeFamilies`
 Besides `FunctionalDependencies`, `TypeFamilies` is an alternative to type check the pokemon example.
 ```
 {-# LANGUAGE TypeFamilies #-}
