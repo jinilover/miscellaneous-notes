@@ -274,6 +274,16 @@ instance TooMany Int where
 newtype Goats = Goats Int deriving (Eq, Show, TooMany)
 ```
 
+Another sample usage of `GeneralizedNewtypeDeriving`
+```
+{-# LANGUAGE GeneralizedNewtypeDeriving  #-}
+newtype MyApp a = MyApp {
+      runApp :: ReaderT WebAPIAuth IO a
+    } deriving (Functor, Applicative, Monad, MonadIO,
+                MonadThrow, MonadCatch, MonadMask,
+                MonadReader WebAPIAuth)
+```
+
 ### 4. `InstanceSigs` - allows type signature in defining the type class instance
 In defining the type class instance, it is unnecessary and not allowed to write the function type signature.  E.g.
 ```Haskell
