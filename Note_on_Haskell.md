@@ -1,7 +1,7 @@
 # Note on Haskell/FP
 Some personal note in learning Haskell or thinking FP
 
-## Mostly thinking or derivation, minimum FP knowledge
+## Mostly thinking or derivation, very little FP knowledge required
 
 ### 1. `(.)`
 Inspired by the "applicative" chapter in the purple book.  Consider the following **pseudo code**   
@@ -135,7 +135,26 @@ References:
 
 References:
 * https://riptutorial.com/haskell/example/15506/communicating-between-threads-with--mvar-
+* https://stackoverflow.com/questions/15439966/when-why-use-an-mvar-over-a-tvar
 
+## `ByteString`
+It's a space-efficient representation of a `Word8` vector.  It is not intended to be a string and is an array of bytes that comes in both strict and lazy forms.  It can be used to store 8-bit character strings and also to handle binary data.   This type is not for text manipulation as it doesn’t support Unicode. It's de facto standard type for networking, serialization, and parsing in Haskell.
+
+## `Text`
+`Text` provides an efficient packed Unicode text type.
+
+## `String` vs `Text`
+If the application targets at processing large amounts of character oriented data and/or various encodings, then it should use `Text`.  Otherwise, using `String` is fine.
+
+References:
+* http://www.alexeyshmalko.com/2015/haskell-string-types/
+* https://mmhaskell.com/blog/2017/5/15/untangling-haskells-strings
+
+## Performance/Strictness/Laziness
+Because of laziness, the compiler can't evaluate a function argument and pass the value to the function, it has to record the expression in the heap in a suspension (or thunk) in case it is evaluated later. Storing and evaluating suspensions is costly, and unnecessary if the expression was going to be evaluated anyway.
+
+References:
+* https://wiki.haskell.org/Performance/Strictness
 
 ## Using a type signature to tell if a function is pure or not
 A function is pure such that its result only depends on the provided input.  To tell if a function is pure or not, use ```:type```.  If the result type prefixes with ```IO```, this function is impure.  E.g.
@@ -167,7 +186,7 @@ Example
 ```Haskell
 data Vector a = Vector a a a deriving (Show)
 ```
-`Vector a` is the **type**, `Vector aaa` is the **value**.  Therefore, `Vector a` but **not** ```Vector a a a``` should be put in the function's type signature.
+`Vector a` is the **type**, `Vector a a a` is the **value**.  Therefore, `Vector a` but **not** ```Vector a a a``` should be put in the function's type signature.
 ```Haskell
 vplus :: (Num t) => Vector t -> Vector t -> Vector t
 (Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
@@ -208,6 +227,22 @@ instance (Eq m) => Eq (Maybe m) where
 To make ```Maybe m``` be a type class ```Eq```, it should require ```m``` be a type class ```Eq```.  The purpose is similar to requiring a type be a particular type class in defining a function.  E.g.
 ```Haskell
 (+) :: Num a => a -> a -> a
+```
+
+## Commonly used `Contravariant` example 
+```
+class Contravariant f where
+    contramap :: (a -> b) -> f b -> f a
+```
+
+### Contravariant example
+We remember that `r -> a` where `r ->` is a functor.  `a -> r` where `-> r` is a contravariant.
+
+```
+newtype ReverseFunction r a = ReverseFunction { func :: a -> r}
+
+instance Contravariant (ReverseFunction r) where
+    contramap f (ReverseFunction g) = ReverseFunction $ g . f
 ```
 
 ## Pragmas
@@ -460,6 +495,16 @@ Comparing with `FunctionalDependencies`, `TypeFamilies` seems a bit less trivial
 References: 
 * https://www.schoolofhaskell.com/school/to-infinity-and-beyond/pick-of-the-week/type-families-and-pokemon.
 * http://www.mchaver.com/posts/2017-06-21-type-families.html
+
+### 11. `OverloadedStrings`
+When this extension is set, 2 things happen:
+* Type of string literal is changed to type `IsString a => a` where `fromString :: String -> a` is delcared in this type class.
+* `"sample"` is changed to `fromString "sample"`.
+
+`Text` is `instance IsString Text`, therefore `b = "sample" :: Text`, type of `b` is `Text`.
+
+`ByteString` is also `instance IsString ByteString`, therefore `b = "sample" :: ByteString`, type of `b` is `ByteString`.
+
 
 
 
