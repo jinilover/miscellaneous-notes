@@ -294,6 +294,9 @@ data SomeException = forall e. Exception e => SomeException e
 func :: SomeException
 ```
 
+Reference:
+* https://wiki.haskell.org/Existential_type
+
 ### 3. `GeneralizedNewtypeDeriving` - make a type class derivable
 Suppose there is a type class from which an instance has been created for a type.  If there is a newtype contains this type and we want to reuse this type class instance for this newtype, we can use the pragma ```GeneralizedNewtypeDeriving```.
 Example
