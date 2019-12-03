@@ -249,8 +249,6 @@ instance Contravariant (ReverseFunction r) where
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
 ### 1. `forall` and RankNTypes
-There is a good explanation in http://sleepomeno.github.io/blog/2014/02/12/Explaining-Haskell-RankNTypes-for-all/
-
 E.g.
 ```Haskell
 applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
@@ -268,11 +266,35 @@ applyToTuple = \f -> \(x, y) -> (f x, f y)
 ```
 
 #### Reason
-Type signature’s type variables are **implicitly** universally quantified by an **invisible** `forall` section.  Therefore ```applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)``` is actually compiled to ```applyToTuple :: forall a b c. ([a] -> Int) -> ([b], [c]) -> (Int, Int)```
+Type signature’s type variables are implicitly **universally** quantified by an **invisible** `forall` section.  Therefore 
+```
+applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
+``` 
+is actually compiled to 
+```
+applyToTuple :: forall a b c. ([a] -> Int) -> ([b], [c]) -> (Int, Int)
+```
 
-Therefore the type checker expects type variables a, b and c to be different concrete types.  So ```[a] -> Int``` might become ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever after a function is passed to ```applyToTuple```.  ```(f x, f y)``` seeks to apply that function to two lists of different types – however, any version of that function, i.e. ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever, expects its list to always be of 1 concrete type only.
+The type checker expects type variables a, b and c to be different concrete types.  So ```[a] -> Int``` might become ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever after a function is passed to ```applyToTuple```.  ```(f x, f y)``` seeks to apply that function to two lists of different types – however, any version of that function, i.e. ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever, expects its list to always be of 1 concrete type only.
 
-If it's re-written as ```applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)``` which is compiled to ```applyToTuple :: forall b c. (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)```, (```a``` and ```b```) or (```a``` and ```c```) will be in **different scopes**.  ```a``` is therefore only 1 type thoughout that function ```[a] -> Int```.  Then this function can be passed any list type.
+If it's re-written as 
+```
+applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
+``` 
+which is compiled to 
+```
+applyToTuple :: forall b c. (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
+```
+(`a` and `b`) or (`a` and `c`) will be in **different scopes**.
+
+Note for the modified `applyToTuple`:
+* A variable is **universally quantified** when the consumer of the expression it appears in can choose what it will be.  E.g. `b` and `c`.  Because `applyToTuple` users can choose what the types `b` and `c` are.
+* A variable is **existentially quantified** when the consumer of the expression it appears in have to deal with the fact that the choice was made for him.  E.g. `a`.  Because it has to deal wih any type given to it.
+* Once entered inside `applyToTuple`, `b` and `c` are then **existentially quantified** because this function user has already chosen the types from calling.
+
+Reference:
+* https://markkarpov.com/post/existential-quantification.html
+* http://sleepomeno.github.io/blog/2014/02/12/Explaining-Haskell-RankNTypes-for-all/
 
 ### 2. `forall` and `ExistentialQuantification`
 In this case `forall` is used on defining a type.  E.g. 
@@ -294,7 +316,11 @@ data SomeException = forall e. Exception e => SomeException e
 func :: SomeException
 ```
 
+#### Why existentials?
+Existentials are always about throwing type information away. Why would we want to do that? The answer is: sometimes we want to work with types that we don’t know at compile time. The types typically depend on the state of external world: they could depend on user’s input, on contents of a file we’re trying to parse, etc.
+
 Reference:
+* https://markkarpov.com/post/existential-quantification.html
 * https://wiki.haskell.org/Existential_type
 
 ### 3. `GeneralizedNewtypeDeriving` - make a type class derivable
