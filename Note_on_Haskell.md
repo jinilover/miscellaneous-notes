@@ -413,6 +413,9 @@ data Expr a where
   Eq  :: Eq a => Expr a -> Expr a -> Expr Bool
 ```
 
+The key is to allow a data constructor's **return type to be specified directly**
+E.g. `-> Expr Int`, `-> Expr Bool`
+
 In this case, GADT makes use of phantom type but it's more type safe than phantom type because e.g. 
 ```
 I 1 `Eq` B True
