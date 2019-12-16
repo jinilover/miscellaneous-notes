@@ -164,6 +164,15 @@ readFile :: FilePath -> IO String
 ```
 This IO monad allows you to build any "impure" task such as database update.
 
+## Variance, positive/negative position
+
+Positive position means the type variable is the **result/output/range/codomain** of the function, e.g. `Maybe a`, `r -> a`.  Under this condition, the data type is covariant with `a` s.t. a **functor** instance, but not contravariant instance, can be made for the "context" of `a`
+
+Negative position means the type variable is the **argument/input/domain** of the function, e.g. `data MakeInt a = MakeInt (a -> Int)`.  Under this condition, the data type is contravariant with `a` s.t. a **contravariant** instance, but not functor instance, can be made for the "context" of `a`
+
+Reference:
+* https://www.fpcomplete.com/blog/2016/11/covariance-contravariance 
+
 ## Polymorphic functions
 Functions that have type variables are called polymorphic functions.  E.g.
 ```
