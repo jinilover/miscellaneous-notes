@@ -49,15 +49,16 @@ Because
 ```
 (.) :: (b -> c) -> (a -> b) -> a -> c
 ```
-Therefore in `(.).(.)`, to compose with the 2nd `(.)`, the 1st `(.)` must be `((a -> b) -> a -> c) -> ???`.  
+Therefore in `(.).(.)`, to compose with the right `(.)`, the left `(.)` must be `((a -> b) -> a -> c) -> ???`.  
 
-Comparing the first arguments of both `(.)`s,   
-`((a -> b) -> a -> c)` is analogous to `(b -> c)`, substituting `a` by `a1`, `b` by `(a -> b)`, `c` by `a -> c`,  
-`???` is `(a1 -> a -> b) -> a1 -> a -> c`, tidy up the variables, it is `(a1 -> a2 -> b) -> a1 -> a2 -> c`
+Since `(.)` must be something like `(b -> c) -> (a -> b) -> a -> c`,
 
-```
-(.).(.) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
-```
+compare `((a -> b) -> a -> c) -> ???` with `(b -> c) -> (a -> b) -> a -> c`,
+
+`((a -> b) -> a -> c)` is analogous to `(b -> c)`.
+
+Therefore `???` is `(a1 -> a -> b) -> a1 -> a -> c` which can be tidied as `(a1 -> a2 -> b) -> a1 -> a2 -> c`.
+So `(.).(.)` is `(b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c`.
 
 ### 2. Setter
 This is inspired by the lens derivation note.  Suppose  
@@ -256,6 +257,13 @@ instance Contravariant (ReverseFunction r) where
 
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
+
+### GHC extensions learnt from "Haskell in depth"
+
+* `OverloadedStrings` p. 14
+* `DeriveAnyClass` p. 24
+* `StandaloneDeriving` p. 31
+* `NoImplicitPrelude` p. 105
 
 ### 1. `forall` and RankNTypes
 E.g.
