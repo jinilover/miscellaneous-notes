@@ -202,18 +202,21 @@ vplus :: (Num t) => Vector t -> Vector t -> Vector t
 (Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
 ```
 
-## `newtype` is sometimes used instead of `data`
-For a given type, if there is only 1 value constructor which only contains 1 field.  Key word ```newtype``` can be used instead of ```data```.
+## `newtype` is preferred to `data` iunder certain conditions
+For a given type, if there is only 1 data constructor containing single field.  Key word ```newtype``` can be used instead of ```data```.
 Example.
 ```Haskell
 data Hm = Hm Int
 ```
-can be written as
+is better written as
 ```Haskell
 newtype Hm = Hm Int
 ```
-The advantage of using ```newtype``` is during runtime, it does not need the wrapping/ unwrapping of the underlying type, ```Int``` in this case.  But during the compilation time, it safesguards the accidental assignment of an ```Int``` value to the ```Hm``` type.
-Type variable is allowed in ```newtype```.  Example
+This safeguards a mistake of assigning an ```Int``` value to the ```Hm``` type during compilation.
+Before compiling to an executable, it generates the source code by removing the ```newtype```.
+This avoids the runtime overhead of wrapping/unwrapping for the underlying value.
+
+Type variable is also allowed in ```newtype```.  Example
 ```Haskell
 newtype Hm a = Hm a
 ```
