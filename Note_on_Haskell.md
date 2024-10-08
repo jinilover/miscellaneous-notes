@@ -261,6 +261,47 @@ instance Contravariant (ReverseFunction r) where
 
 Therefore Json encoder is contravariant.
 
+## `Generic` 101
+Idea: all data types can be described by either sum type or product type or both.  Therefore there is a generic way to represent the data types s.t. the compiler can generate this common, low-level data representation automatically.  This idea is implemented using the type class as follows.
+
+```
+class Generic a where
+    -- Convert a value to its generic representation
+    from :: a -> Rep a
+
+    -- Convert the generic representation back to the value
+    to   :: Rep a -> a
+
+```
+
+To automatically generate generic representation for a data type, GHC extension `DeriveGeneric` is applied as follows.
+
+```
+{-# LANGUAGE DeriveGeneric #-}
+
+import GHC.Generics (Generic)
+
+data Person = Person { name :: String, age :: Int }
+  deriving (Generic, Show)
+```
+
+Representing a data type in generic representation allow functions (e.g. serialization or deserialization) to be written in a way that they can work with any data type rather than being hardcoded.  `aeson` are great examples of functions that work on a data type's generic representation.
+
+```
+{-# LANGUAGE DeriveGeneric #-}
+
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON, FromJSON)
+
+data Person = Person { name :: String, age :: Int }
+  deriving (Generic, Show)
+
+instance ToJSON Person
+instance FromJSON Person
+```
+
+A note: The `Generic` type class is closely related to the isomorphism concept.
+
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
@@ -560,6 +601,33 @@ When this extension is set, 2 things happen:
 
 `ByteString` is also `instance IsString ByteString`, therefore `b = "sample" :: ByteString`, type of `b` is `ByteString`.
 
+### 12. `DeriveGeneric`
+It has been explained in the section of data type generic representation.
 
+### 13. `DeriveAnyClass`
+Get back to the `aeson` example again.
+```
+{-# LANGUAGE DeriveGeneric #-}
 
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON, FromJSON)
 
+data Person = Person { name :: String, age :: Int }
+  deriving (Generic, Show)
+
+instance ToJSON Person
+instance FromJSON Person
+```
+
+We can remove the last 2 lines by deriving `ToJSON` and `FromJSON` as follows.
+```
+{-# LANGUAGE DeriveAnyClass #-} 
+{-# LANGUAGE DeriveGeneric #-}
+
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON) 
+
+data Person = Person { name :: String , age :: Int } deriving (Show, Generic, FromJSON, ToJSON)
+```
+
+Note: `Show`, `Eq`, `Ord` have built-in support for deriving, `DeriveAnyClass` is not required for these type classes.
