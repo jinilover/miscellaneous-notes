@@ -300,7 +300,17 @@ instance ToJSON Person
 instance FromJSON Person
 ```
 
-A note: The `Generic` type class is closely related to the isomorphism concept.
+Note: The `Generic` type class is closely related to the isomorphism concept.
+
+## `Exception` type class
+* We can throw exceptions in pure function using `throw`.  But this is **highly not recommended**.  Instead, we should use `throwIO` whose return type is IO a.  The reason is pure code cannot catch exceptions.  Exceptions can only be handled within `IO`.  These handled exceptions are `Exception` instances.
+* We can define Exception instances for application purposes.
+* Even if we define the Exception instance, when we throw it by, say, `throwIO`, it will be wrapped automatically inside `SomeException` so that it can be caught by `catch` or `catchAll`.
+* Consider an example, `handle handleHttpException ma` where `handleHttpException :: MonadCatch m => HttpException -> m a` and `HttpException` is `Exception`.  If another exception type is thrown during runtime, it won't be handled by `handleHttpException`, and be propagated as an unhandled exception, and depending on how the program is structured, it will be either
+  * Caught by another handler up the chain or
+  * Cause the program to terminate with an unhandled exception error.
+* Given the note mentioned before, we can see that `Exception` does not represents all GHC runtime exceptions.  But GHC runtime generated exceptions are `Exception` instances.  Therefore these GHC runtime exceptions can be handled by the `Exception` framework.
+* When to use Exception or not?  I think if the code is **pure**, we can define programmatic exceptions which is more readable.
 
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
