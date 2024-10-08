@@ -242,14 +242,15 @@ To make ```Maybe m``` be a type class ```Eq```, it should require ```m``` be a t
 (+) :: Num a => a -> a -> a
 ```
 
-## Commonly used `Contravariant` example 
+## `Contravariant`
 ```
 class Contravariant f where
     contramap :: (a -> b) -> f b -> f a
 ```
 
-### Contravariant example
-We remember that `r -> a` where `r ->` is a functor.  `a -> r` where `-> r` is a contravariant.
+### Contravariant examples
+In `r -> a`, `(r ->)` is a functor.  
+In `a -> r`, `(-> r)` is a contravariant.
 
 ```
 newtype ReverseFunction r a = ReverseFunction { func :: a -> r}
@@ -257,6 +258,8 @@ newtype ReverseFunction r a = ReverseFunction { func :: a -> r}
 instance Contravariant (ReverseFunction r) where
     contramap f (ReverseFunction g) = ReverseFunction $ g . f
 ```
+
+Therefore Json encoder is contravariant.
 
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
