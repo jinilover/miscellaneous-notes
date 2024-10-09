@@ -1,7 +1,5 @@
 # Note on Haskell/FP
-Some personal note in learning Haskell or thinking FP
-
-## Mostly thinking or derivation, very little FP knowledge required
+Personal note in Haskell/FP, most of them concluded from reasoning instead of Haskell specific knowledge.
 
 ### 1. `(.)`
 Inspired by the "applicative" chapter in the purple book.  Consider the following **pseudo code**   
