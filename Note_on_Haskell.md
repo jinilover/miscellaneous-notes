@@ -3,10 +3,10 @@ Personal note in Haskell/FP, most of them concluded from reasoning instead of Ha
 
 ### 1. `(.)`
 Inspired by the "applicative" chapter in the purple book.  Consider the following **pseudo code**   
-`g :: b -> c`  then  
-`g . :: (a3 -> b) -> a3 -> c` s.t. `g . f` where `f :: a3 -> b`  then  
-`(g .) . :: (a2 -> a3 -> b) -> a2 -> a3 -> c` s.t. `g . f` where `f :: a2 -> a3 -> b` then  
-`((g .) .) . :: (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c` s.t. `g . f` where `f :: a1 -> a2 -> a3 -> b`  
+`g :: b -> c`  
+`g . :: (a -> b) -> a -> c` imagine there is `f :: a -> b` s.t. `g . f`    
+`(g .) . :: (a1 -> a2 -> b) -> a1 -> a2 -> c` imagine there is `f :: a1 -> a2 -> b`  
+`((g .) .) . :: (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c`  
 
 Recap **pseudo code**,  
 ```
@@ -17,32 +17,29 @@ Recap **pseudo code**,
 ```
 
 #### Factor out `g` to point free styles
-Base on the **types** of the previous summary, there is another derivation
-
-`g .` is  
-`(.) g` is  
-`(.) :: (b -> c) -> (a3 -> b) -> a3 -> c`  
+According to the previous findings, we can deduce the type of `(.).(.)`
 
 `(g .) .` is  
 `((.) g) . ` is  
 `(.) ((.) g)` is  
-`(.).(.) $ g` is  
-`(.).(.) :: (b -> c) -> (a2 -> a3 -> b) -> a2 -> a3 -> c`  
+`(.).(.) $ g`, factoring out `g` gives   
+`(.).(.) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c`  
 
+Similarly  
 `((g .) .) . ` is  
 `((.).(.) $ g) .` is  
 `(.) ((.).(.) $ g)` is  
 `(.).(.).(.) $ g` is  
 `(.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c`
 
-Recap  
+Another discovery  
 ```
 (.)         :: (b -> c) ->             (a3 -> b) ->             a3 -> c
 (.).(.)     :: (b -> c) ->       (a2 -> a3 -> b) ->       a2 -> a3 -> c
 (.).(.).(.) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
 ```
 
-#### Altervative (simpler) way to find the types
+#### Altervative way to find the types w/o using `g`
 Because
 ```
 (.) :: (b -> c) -> (a -> b) -> a -> c
