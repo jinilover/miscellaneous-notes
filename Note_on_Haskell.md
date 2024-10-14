@@ -307,6 +307,40 @@ Note: The `Generic` type class is closely related to the isomorphism concept.
 * Given the note mentioned before, we can see that `Exception` does not represents all GHC runtime exceptions.  But GHC runtime generated exceptions are `Exception` instances.  Therefore these GHC runtime exceptions can be handled by the `Exception` framework.
 * When to use Exception or not?  I think if the code is **pure**, we can define programmatic exceptions which is more readable.
 
+## Automatic conversion - "secret" GHC behaviour
+This is a mysterious feature if you are unfamiliar with the GHC behaviour.  The code still works w/o automatic conversion.  But it will simplify the code if you know this "secret" behaviour.  
+Automatic conversion happens in a few occasions based on **type class** instances.   
+
+### 1. `Num` 
+If the type of an expression is `Num` instance, GHC will **automatically call** `fromInteger :: Num a => Integer -> a` for an integer literal.  E.g.
+```
+data Temp = Temp Double deriving (Num, Fractional)
+
+paperBurning = 451 :: Temp
+```
+
+### 2. `Fractional`
+Similarly, GHC will **automatically call** `fromRational :: Fractional a => Rational -> a` for a fractional literal.  E.g. 
+```
+absoluteZero = -273.15 :: Temp
+```
+
+### 3. `IsString` - requires`OverloadedStrings` extension
+GHC will **automatically call** `fromString :: IsString a => String -> a` for a string literal.  E.g.
+```
+{-# LANGUAGE OverloadedStrings #-}
+
+myText = "hello world" :: Text
+```
+
+### 4. `IsList` - requires`OverloadedLists` extension
+GHC will **automatically call** `fromList :: IsList l => [Item l] -> l` for a list literal.  E.g.
+```
+{-# LANGUAGE OverloadedLists #-}
+
+vector = [1,2,3,4,5] :: Vector Int
+```
+
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
@@ -598,18 +632,15 @@ References:
 * http://www.mchaver.com/posts/2017-06-21-type-families.html
 
 ### 11. `OverloadedStrings`
-When this extension is set, 2 things happen:
-* Type of string literal is changed to type `IsString a => a` where `fromString :: String -> a` is delcared in this type class.
-* `"sample"` is changed to `fromString "sample"`.
+It has been explained in the section of automatic conversion.
 
-`Text` is `instance IsString Text`, therefore `b = "sample" :: Text`, type of `b` is `Text`.
+### 12. `OverloadedLists`
+It has been explained in the section of automatic conversion.
 
-`ByteString` is also `instance IsString ByteString`, therefore `b = "sample" :: ByteString`, type of `b` is `ByteString`.
-
-### 12. `DeriveGeneric`
+### 13. `DeriveGeneric`
 It has been explained in the section of data type generic representation.
 
-### 13. `DeriveAnyClass`
+### 14. `DeriveAnyClass`
 Get back to the `aeson` example again.
 ```
 {-# LANGUAGE DeriveGeneric #-}
