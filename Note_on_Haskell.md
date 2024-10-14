@@ -341,6 +341,20 @@ GHC will **automatically call** `fromList :: IsList l => [Item l] -> l` for a li
 vector = [1,2,3,4,5] :: Vector Int
 ```
 
+## Type variable scope
+The following code has compilation error
+```
+unit :: UnitName u => Temp u -> String
+unit _ = unitName (Proxy :: Proxy u)
+```
+The scope of `u` is within the function type signature only.  GHC doesn't know where the `u` of `Proxy u` comes from.  
+The code is fixed by adding `forall`
+```
+unit :: forall u. UnitName u => Temp u -> String
+unit _ = unitName (Proxy :: Proxy u)
+```
+`forall` broadens the scope of `u` from the type signature to the function implementation as well.
+
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
