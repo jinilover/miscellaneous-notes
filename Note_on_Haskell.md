@@ -681,3 +681,36 @@ data Person = Person { name :: String , age :: Int } deriving (Show, Generic, Fr
 ```
 
 Note: `Show`, `Eq`, `Ord` have built-in support for deriving, `DeriveAnyClass` is not required for these type classes.
+
+### 15. `AllowAmbiguousTypes`
+The following code doesn't compile.
+```
+class UnitName u where
+  unitName :: String
+```
+The reason the function `unitName` doesn't have an argument depending on the type variable `u` abstracted by the type class.  Enabling `AllowAmbiguousTypes` makes it compile.  However, the function still doesn't know the concrete type (or kind in general) when it's called.
+
+### 16. `TypeApplications`
+It addresses the problem mentioned in the previous section.  Even the code compiles, `unitName` doesn't have an argument depending on the type variable targetted by the type class, we can't call it.  Enabling `TypeApplications` solves the problem.  Suppose there is a concrete type, say, `F` and its `UnitName` instance, it can be called as
+```
+unitName @F
+```
+
+The `UnitName` example illustrates how to use `AllowAmbiguousTypes` and `TypeApplications` to carry type information w/o requiring a value of that type.  An alternative solution is using `Data.Proxy` as
+```
+import Data.Proxy
+
+class UnitName u where
+  unitName :: Proxy u -> String
+```
+Suppose there is a type `F` and its `UnitName` instance, the function can be called as
+```
+unitName (Proxy :: Proxy F)
+```  
+
+**Note on using `@` when `TypeApplications` enabled**  
+* If the function is polymorphic, we can use `@`.  This function is not necessarily from a type class such as `unitName`
+* `@` is usually placed right after the function name
+  * `read @Int "42"`
+  * `map @Int show [1, 2, 3]` - although it's not needed given the type inference
+* What if there are multiple type variables such as `fmap :: Functor f => (a -> b) -> f a -> f`?  The order will be `fmap @[] @Int @String show [1,2,3]`.
