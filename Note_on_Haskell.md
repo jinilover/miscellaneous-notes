@@ -308,7 +308,7 @@ Note: The `Generic` type class is closely related to the isomorphism concept.
 * When to use Exception or not?  I think if the code is **pure**, we can define programmatic exceptions which is more readable.
 
 ## Automatic conversion - "secret" GHC behaviour
-This is a mysterious feature if you are unfamiliar with the GHC behaviour.  The code still works w/o automatic conversion.  But it will simplify the code if you know this "secret" behaviour.  
+This is a mysterious feature if you are unfamiliar with the GHC behaviour.  The code still works w/o explicit conversion.  But it will simplify the code if you know this "secret" behaviour.  
 Automatic conversion happens in a few occasions based on **type class** instances.   
 
 ### 1. `Num` 
