@@ -185,7 +185,7 @@ sum :: Num a => [a] -> a
 ```
 
 ## Pay attention when the name of type constructor and value constructor are the same
-People new to FP usually have this mistake.  In defining an ADT, a type constructor and a value constructor have the same name.
+People new to FP usually have this mistake.  Imagine a type constructor and a value constructor have the same name as follows:
 
 Example
 ```Haskell
@@ -197,7 +197,7 @@ vplus :: (Num t) => Vector t -> Vector t -> Vector t
 (Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
 ```
 
-## `newtype` is preferred to `data` iunder certain conditions
+## `newtype` is preferred to `data` under certain conditions
 For a given type, if there is only 1 data constructor containing single field.  Key word ```newtype``` can be used instead of ```data```.
 Example.
 ```Haskell
@@ -227,15 +227,14 @@ class Eq a => Num a where
 ```
 If ```a``` is ```Num```, it should also be ```Eq```.  i.e ```Num``` is ```Eq```
 
-Type class is used for function declaration, not for data type declaration.  To make a data type be the type class, the type class instance should be defined accordingly.  In some conditions, a type class instance can be defined by re-using another type class instance.  E.g.
+Type class is used for function declaration, not for data type declaration.  
+In some conditions, a type class instance can be defined only if another type class is satisfied.  
+Example
 ```Haskell
 instance (Eq m) => Eq (Maybe m) where
   -- implement Eq's required behaviour for the type Maybe m
 ```
-To make ```Maybe m``` be a type class ```Eq```, it should require ```m``` be a type class ```Eq```.  The purpose is similar to requiring a type be a particular type class in defining a function.  E.g.
-```Haskell
-(+) :: Num a => a -> a -> a
-```
+i.e. to make ```Maybe m``` satisfy ```Eq```, ```m``` should satisfy ```Eq```.
 
 ## `Contravariant`
 ```
