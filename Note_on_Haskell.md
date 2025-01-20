@@ -354,6 +354,14 @@ unit _ = unitName (Proxy :: Proxy u)
 ```
 `forall` broadens the scope of `u` from the type signature to the function implementation as well.
 
+## `Show` 101
+When enter a value on GHCi, it tries to display the result using its `Show` by `print` implicitly.  
+```
+print :: Show a => a -> IO ()
+print x = putStrLn (show x)
+```
+That explains why `show 'a'` gives `"'a'"` but `'a'` gives `'a'` on GHCi.
+
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
@@ -713,3 +721,14 @@ unitName (Proxy :: Proxy F)
   * `read @Int "42"`
   * `map @Int show [1, 2, 3]` - although it's not needed given the type inference
 * What if there are multiple type variables such as `fmap :: Functor f => (a -> b) -> f a -> f`?  The order will be `fmap @[] @Int @String show [1,2,3]`.
+
+### 17. `ConstraintKinds`
+`type Show' a = Show a` gets compilation error.  Fix it by enabling `ConstraintKinds`.  
+
+Usage:
+* `type Showable a b = (Show a, Show b)`  
+  `printPair :: Showable a b => a -> b -> IO ()`
+* `type UnescapingShow t = (ToUnescaping t, Show (ToUnescapingTF t))`  
+  `ushow :: UnescapingShow t => t -> String`  
+
+This avoids repeating multiple type class requirement across function declaration.
