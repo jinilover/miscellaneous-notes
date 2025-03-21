@@ -373,43 +373,50 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 * `NoImplicitPrelude` p. 105
 
 ### 1. `forall` and RankNTypes
-E.g.
+This is about the concept of arbitrary-rank polymorphism.  
+
+Example
+```Haskell
+processInts :: (a -> a) -> [Int] -> [Int]
+processInts f = map f
+```
+
+Compilation failed.  The above code is indeed
+```Haskell
+processInts :: forall a. (a -> a) -> [Int] -> [Int]
+processInts f = map f
+```
+
+It compiles if the scope of `forall` is changed as
+```Haskell
+processInts :: (forall a. a -> a) -> [Int] -> [Int]
+processInts f = map f
+```
+
+Reasons: 
+* The `forall` scope determines what function level `a` is universally quantified at.
+* The function caller determines what `a` is.
+
+In first case, `a` is universally quantified at `processInts`.  i.e. `a` is determined by the `processInts` caller but the `(a -> a)` passed by the caller may not satisify the implementation requirement.  
+In second case, `a` is universally quantified at `f`.  i.e. `a` is determined by the `f` caller which in this case is the `processInts` implementation.  Therefore it compiles.  If the implementation doesn't call `f`, it will be somewhere else, not necessarily the `processInts` caller, determines `a`.
+
+Another example
 ```Haskell
 applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
-applyToTuple = \f -> \(x, y) -> (f x, f y)
+applyToTuple f (x, y) = (f x, f y)
 ```
 
-It fails to compile because types ```a```, ```b``` and ```c``` do not match.  Theoretically the function of type ```[a] -> Int``` should be applied to any list.  Under this scenario, it needs something call ```RankNTypes```.  Solution:
-* Enable GHCI extension
-* Use keyword ```forall```
-
+Compilation failed due to same reason.  The code is indeed
 ```Haskell
-{-# LANGUAGE RankNTypes #-}
-applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
-applyToTuple = \f -> \(x, y) -> (f x, f y)
-```
-
-#### Reason
-Type signature’s type variables are implicitly **universally** quantified by an **invisible** `forall` section.  Therefore 
-```
-applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
-``` 
-is actually compiled to 
-```
 applyToTuple :: forall a b c. ([a] -> Int) -> ([b], [c]) -> (Int, Int)
+applyToTuple f (x, y) = (f x, f y)
 ```
 
-The type checker expects type variables a, b and c to be different concrete types.  So ```[a] -> Int``` might become ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever after a function is passed to ```applyToTuple```.  ```(f x, f y)``` seeks to apply that function to two lists of different types – however, any version of that function, i.e. ```[Char] -> Int``` or ```[Int] -> Int``` or whatsoever, expects its list to always be of 1 concrete type only.
-
-If it's re-written as 
+It compiles if the scope of `forall` is changed as
+```Haskell
+applyToTuple :: (forall a. [a] -> Int) -> ([b], [c]) -> (Int, Int)
+applyToTuple f (x, y) = (f x, f y)
 ```
-applyToTuple :: (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
-``` 
-which is compiled to 
-```
-applyToTuple :: forall b c. (forall a. [a] -> Int) -> ([b],[c]) -> (Int, Int)
-```
-(`a` and `b`) or (`a` and `c`) will be in **different scopes**.
 
 Note for the modified `applyToTuple`:
 * A variable is **universally quantified** when the consumer of the expression it appears in can choose what it will be.  E.g. `b` and `c`.  Because `applyToTuple` users can choose what the types `b` and `c` are.
