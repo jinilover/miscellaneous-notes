@@ -373,9 +373,9 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 * `NoImplicitPrelude` p. 105
 
 ### 1. `forall` and RankNTypes
-This is about the concept of arbitrary-rank polymorphism.  
+Use `forall` to implement the idea of arbitrary-rank polymorphism.
 
-Example
+<u>Example 1</u>
 ```Haskell
 processInts :: (a -> a) -> [Int] -> [Int]
 processInts f = map f
@@ -400,7 +400,7 @@ Reasons:
 In first case, `a` is universally quantified at `processInts`.  i.e. `a` is determined by the `processInts` caller but the `(a -> a)` passed by the caller may not satisify the implementation requirement.  
 In second case, `a` is universally quantified at `f`.  i.e. `a` is determined by the `f` caller which in this case is the `processInts` implementation.  Therefore it compiles.  If the implementation doesn't call `f`, it will be somewhere else, not necessarily the `processInts` caller, determines `a`.
 
-Another example
+<u>Example 2</u>
 ```Haskell
 applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
 applyToTuple f (x, y) = (f x, f y)
@@ -426,6 +426,29 @@ Note for the modified `applyToTuple`:
 Reference:
 * https://markkarpov.com/post/existential-quantification.html
 * http://sleepomeno.github.io/blog/2014/02/12/Explaining-Haskell-RankNTypes-for-all/
+
+<u>Example 3</u>
+```Haskell
+newtype NumModifier = NumModifier {
+  run :: a -> a
+}
+```
+It complains `a` is not in scope.  This is defining a type, not a function.  The fix is either adding `a` on the type level or using `forall` as follows.  
+
+```Haskell
+newtype NumModifier = NumModifier {
+  run :: forall a. a -> a
+}
+```
+`a` is not applicable for the data type `NumModifier` but only within the field `run`.
+
+```Haskell
+data NumModifier = NumModifier {
+   run1 :: forall a. a -> a
+ , run2 :: forall a. Num a => a -> a
+}
+```
+`a` in `run1` and `a` in `run2` are completely independent.
 
 ### 2. `forall` and `ExistentialQuantification`
 In this case `forall` is used on defining a type.  E.g. 
