@@ -120,7 +120,10 @@ Both achive mutability in side-effect free manner using different means.
 `IORef` provides mutable value in `IO` monad.  As the name implies, it's reference to some data that allows functions to change this data and these functions must operate in `IO`.  That is, the data can only be modified by going through `IO`.
 
 ### `STRef`
-`STRef` provdes mutable value in `ST` monad where the mutable memory is only used internally, i.e. the functions must be operate in `ST`.
+* `STRef` provdes mutable value in `ST s` monad where the mutable memory is only used internally, i.e. the functions must be operate in `ST s`.  
+* `s` represents the mutable memory which is set by library or GHC developers.
+* Function such as `runST :: (forall s. ST s a) -> a` uses rank-2 polymorphism.  This implies the function implementation determines `s`.  It's unlikely to set `s` at the application level.  
+* The monadic context is `ST s` and since it's unlikely to have different `s` on the application level, it's unlikely have `ST s1` and `ST s2` in monadic operation to perform the data mutation.
 
 References:
 * https://wiki.haskell.org/Monad/ST
@@ -352,7 +355,7 @@ The code is fixed by adding `forall`
 unit :: forall u. UnitName u => Temp u -> String
 unit _ = unitName (Proxy :: Proxy u)
 ```
-`forall` broadens the scope of `u` from the type signature to the function implementation as well.
+`forall` broadens the scope of `u` from the type signature to the function implementation as well.  Since GHC 9.6.5 or maybe earlier, `ScopedTypeVariables` is not required in order to broaden the type variable scope.
 
 ## `Show` 101
 When enter a value on GHCi, it tries to display the result using its `Show` by `print` implicitly.  
@@ -373,7 +376,7 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 * `NoImplicitPrelude` p. 105
 
 ### 1. `forall` and RankNTypes
-Use `forall` to implement the idea of arbitrary-rank polymorphism.
+Use `forall` to implement the idea of arbitrary-rank polymorphism.  I found `RankNTypes` is inferred w/o enabling the extension since GHC 9.6.5 or maybe earlier.
 
 <u>Example 1</u>
 ```Haskell
