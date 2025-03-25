@@ -551,17 +551,9 @@ data Weaken a where -- starts with data, like class
 https://wiki.haskell.org/Data_declaration_with_constraint
 
 ### 6. Generalized Algebraic Data Types (GADTs)
-GADT can be used to solve the problem mentioned before.  
+A parameterised ADT enforces all its constructors to have the **same parameterised type**.  GADT lifts this restriction to allow each of its constructor to specify its own parameterised type.  
 
-If we want to define a data constructor in the following way, notice the double colons.
-```
-data Expr a where
-  I   :: Expr Int
-```
-GADTs extension should be enabled.  
-
-If we want to use smart constructor, it can also apply GADT
-```
+```Haskell
 data Expr a where
   I   :: Int  -> Expr Int
   B   :: Bool -> Expr Bool
@@ -570,14 +562,10 @@ data Expr a where
   Eq  :: Eq a => Expr a -> Expr a -> Expr Bool
 ```
 
-The key is to allow a data constructor's **return type to be specified directly**
-E.g. `-> Expr Int`, `-> Expr Bool`
+Without GADT, `I 1` and `B True` produce the same type s.t. `Eq (I 1) (B True)` compiles.  But GADT enables compilation error.  
 
-In this case, GADT makes use of phantom type but it's more type safe than phantom type because e.g. 
-```
-I 1 `Eq` B True
-``` 
-will raise compilation error because `a` can track the type.  For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
+* For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
+* Since GHC 9.6.5 or maybe earlier, `GADTs` is not required to be enabled to define a GADT.
 
 ### 7. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
