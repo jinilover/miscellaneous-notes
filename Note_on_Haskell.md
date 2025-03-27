@@ -365,6 +365,32 @@ print x = putStrLn (show x)
 ```
 That explains why `show 'a'` gives `"'a'"` but `'a'` gives `'a'` on GHCi.
 
+## Type families
+Basic definition knowledge are assumed.  Observation is summarised:
+* There are open and closed TFs.
+* Associated TF means the TF is associated to a type class.  The TF instance is defined for the corresponding type class instance, therefore only open TF can be associated to a type class.
+* Those TF not associated to a type class is called top-level TF.
+* Unlike TF, a DF instance is not used to map from 1 existing type to another type.  It is used to define a new type.  This idea enables modular extensibility.  Therefore it doesn't make sense for an closed DF.
+* TF is not limited to type-level programming.
+* https://serokell.io/blog/type-families-haskell gave a bit in-depth
+
+### Indexed type families
+TFs are sometimes called indexed TFs where the parameter variable is the index.  E.g.
+```Haskell
+type family F a where
+  F Int = Bool
+  F Char = String
+  F a = [a]
+```
+`a` is the index
+
+### DF instance can define an ADT
+```Haskell
+data family Foo a
+data instance Foo Int = FooInt Int | FooPair Int Int
+data instance Foo Bool = FooTrue | FooFalse | FooMaybe Bool
+```
+
 ## Pragmas
 A pragma is a directive to the compiler.  It tells the compiler to enable a language extension that processes input in a way beyond what the standard provides for.
 
