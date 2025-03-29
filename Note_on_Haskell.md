@@ -365,6 +365,48 @@ print x = putStrLn (show x)
 ```
 That explains why `show 'a'` gives `"'a'"` but `'a'` gives `'a'` on GHCi.
 
+## Type-level programming
+Type-level programming is about promoting values to a kind.  The kind of the promoted values is not `Type`, let's call it custom kind, which is eligible to be converted to `Type` s.t. it can be used in function signatures.
+
+### Why promoting values to a kind?
+```Haskell
+data F
+data C
+```
+
+If I want to model a temperature in a particular unit
+```Haskell
+data Temp a = Temp Double
+tempF = Temp 0.3 :: Temp F
+tempC = Temp 0.0 :: Temp C
+```
+
+Semantically `a` should be limited to `F` and `C` only.  But they are **independent** types.  One solution is defining a type class for them but this introduces boilerplate.  What if we add `K` later?
+
+We can relate `F` and `C` by defining them as values.
+```Haskell
+data Unit = F | C
+data Temp (unit :: Unit) = Temp Double
+-- N.B. `data Temp Unit` is invalid because `Unit` is not a variable.  
+
+:k Temp
+Temp :: Unit -> Type
+```
+
+Yet we cannot construct a type of `Temp F` or `Temp C`.  `F` and `C` should be promoted first by enabling `DataKinds`.  Now,
+```Haskell
+:k F
+Unit
+```
+`Unit` itself is a kind **only after promotion**.  Its belonging "things" (`F` or `C`) can be passed to `Temp` to construct `Type`.  
+
+If you are lost, think about:
+* `:k Maybe` is `Type -> Type`.  `Type` is a kind, its belonging "things" is `Bool`, `Char` or so.
+* Similarly, `Unit` is a kind after promotion.  It has the same "rank" as `Type`.  Its belonging "things" are `F` and `C`.
+* After promotion, `F` and `C` have the same "rank" as `Bool`, `Char` or so.  Their kinds can be checked using `:k`.
+
+More problems can be solved by type-level programming.  Many of them apply type families and GADTs, I will leave the discussion to the "Type families" section.
+
 ## Type families
 Basic definition knowledge are assumed.  Observation is summarised:
 * There are open and closed TFs.
@@ -382,7 +424,7 @@ type family F a where
   F Char = String
   F a = [a]
 ```
-`a` is the index
+`a` is the index.
 
 ### DF instance can define an ADT
 ```Haskell
@@ -779,3 +821,6 @@ Usage:
   `ushow :: UnescapingShow t => t -> String`  
 
 This avoids repeating multiple type class requirement across function declaration.
+
+### 18. `DataKinds`
+It has been explained in the section of type-level programming.
