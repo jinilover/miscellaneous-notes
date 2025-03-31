@@ -485,7 +485,7 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 ### 1. `forall` and RankNTypes
 Use `forall` to implement the idea of arbitrary-rank polymorphism.  I found `RankNTypes` is inferred w/o enabling the extension since GHC 9.6.5 or maybe earlier.
 
-<u>Example 1</u>
+#### Example 1
 ```Haskell
 processInts :: (a -> a) -> [Int] -> [Int]
 processInts f = map f
@@ -510,7 +510,7 @@ Reasons:
 In first case, `a` is universally quantified at `processInts`.  i.e. `a` is determined by the `processInts` caller but the `(a -> a)` passed by the caller may not satisify the implementation requirement.  
 In second case, `a` is universally quantified at `f`.  i.e. `a` is determined by the `f` caller which in this case is the `processInts` implementation.  Therefore it compiles.  If the implementation doesn't call `f`, it will be somewhere else, not necessarily the `processInts` caller, determines `a`.
 
-<u>Example 2</u>
+#### Example 2
 ```Haskell
 applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
 applyToTuple f (x, y) = (f x, f y)
@@ -537,7 +537,7 @@ Reference:
 * https://markkarpov.com/post/existential-quantification.html
 * http://sleepomeno.github.io/blog/2014/02/12/Explaining-Haskell-RankNTypes-for-all/
 
-<u>Example 3</u>
+#### Example 3
 ```Haskell
 newtype NumModifier = NumModifier {
   run :: a -> a
@@ -658,8 +658,8 @@ data Weaken a where -- starts with data, like class
 https://wiki.haskell.org/Data_declaration_with_constraint
 
 ### 6. Generalized Algebraic Data Types (GADTs)
+#### Basic idea
 A parameterised ADT enforces all its constructors to have the **same parameterised type**.  GADT lifts this restriction to allow each of its constructor to specify its own parameterised type.  
-
 ```Haskell
 data Expr a where
   I   :: Int  -> Expr Int
@@ -670,9 +670,19 @@ data Expr a where
 ```
 
 Without GADT, `I 1` and `B True` produce the same type s.t. `Eq (I 1) (B True)` compiles.  But GADT enables compilation error.  
-
 * For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
 * Since GHC 9.6.5 or maybe earlier, `GADTs` is not required to be enabled to define a GADT.
+
+#### Support type-level literals
+```Haskell
+data HList xs where
+  HNil :: HList '[]
+  (:&) :: x -> HList xs -> HList (x : xs)
+```
+* The type-level literals require all data constructor to specify its own parameterised type.  Therefore GADT, not ADT, support this requirement.
+* There is one parameter, we expect `:k HList` gives `??? -> Type`.
+* From the the 2 data constructor types, the type-level literals are either `'[]` or `x : xs`.  Therefore `:k HList` should be `[???] -> Type`.
+* `(:&)` indicates that the data structure is formed by elements of kind `Type`.  Therefore `:k HList` is `[Type] -> Type`.
 
 ### 7. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
