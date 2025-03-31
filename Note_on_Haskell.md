@@ -405,6 +405,18 @@ If you are lost, think about:
 * Similarly, `Unit` is a kind after promotion.  It has the same "rank" as `Type`.  Its belonging "things" are `F` and `C`.
 * After promotion, `F` and `C` have the same "rank" as `Bool`, `Char` or so.  Their kinds can be checked using `:k`.
 
+### Is it a value or a "type"?
+It sounds like a pandora's box once `DataKinds` is enabled.  When a value is prefixed by `'`, it is a "type".
+* E.g. `'[]` is a "type", **not** a value.  Remeber that `'[]`'s kind is not `Type` yet.  But a type constructor can convert it to a type, like how `Temp` convert `Unit` to `Type`.
+* `(:)` can be used to present a "type".  Under this condition, it is just a type-level list, i.e. a tag, not a cons operator.  An coming GADT example will explain.
+* Type-level literal examples
+  * `'[]`
+  * `(:)`
+  * `3 :: Nat`
+  * `"hello" :: Symbol` 
+  * `Nat` and `Symbol` are kinds provided by `GHC.TypeLits`
+* Even w/o prefixing `'`, some literals can be recognised as type-level literals.  E.g. `True`, `False`, numbers, characters.
+
 More problems can be solved by type-level programming.  Many of them apply type families and GADTs, I will leave the discussion to the "Type families" section.
 
 ## Type families
