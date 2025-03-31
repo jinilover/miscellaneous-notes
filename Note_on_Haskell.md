@@ -412,19 +412,46 @@ Basic definition knowledge are assumed.  Observation is summarised:
 * There are open and closed TFs.
 * Associated TF means the TF is associated to a type class.  The TF instance is defined for the corresponding type class instance, therefore only open TF can be associated to a type class.
 * Those TF not associated to a type class is called top-level TF.
-* Unlike TF, a DF instance is not used to map from 1 existing type to another type.  It is used to define a new type.  This idea enables modular extensibility.  Therefore it doesn't make sense for an closed DF.
-* TF is not limited to type-level programming.
-* https://serokell.io/blog/type-families-haskell gave a bit in-depth
+* Unlike TF, a DF instance is not used to map from 1 existing type to another type.  It is used to define a new type.  This idea enables modular extensibility.  Therefore it doesn't make sense to have an closed DF.
+* Although the name is "Type" families, TF is not limited to a Type.
+* https://serokell.io/blog/type-families-haskell gave more examples.
 
-### Indexed type families
-TFs are sometimes called indexed TFs where the parameter variable is the index.  E.g.
+### TFs and indexed TFs are used interchangeably
+The parameter variable is the index.  E.g.
 ```Haskell
-type family F a where
+type family F a where -- `a` is the index
   F Int = Bool
   F Char = String
   F a = [a]
+
+:k F
+F :: Type -> Type
 ```
-`a` is the index.
+`a` and `F a` are inferred to be `Type`.
+
+### TF for kinds other than `Type`
+The index and the TF can be explicitly declared the corresponding kind.
+```Haskell
+type family Not (a :: Bool) :: Bool where
+  Not True = False
+  Not _ = True
+
+-- alternatively
+type Not :: Bool -> Bool
+type family Not a where
+  Not True = False
+  Not _ = True
+
+:k Not
+Not :: Bool -> Bool
+```
+
+A TF's kind can even be set polymorphically.
+```Haskell
+type family ToUnescapingTF (a :: k) :: k
+```
+
+
 
 ### DF instance can define an ADT
 ```Haskell
