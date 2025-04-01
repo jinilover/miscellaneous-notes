@@ -470,6 +470,22 @@ A TF's kind can even be set polymorphically.
 type family ToUnescapingTF (a :: k) :: k
 ```
 
+### Compute type-level literals
+After enabling `DataKinds`, non-negative integer are promoted type-level literals.  These type-level literals cannot be computed by using functions.
+
+```Haskell
+import GHC.TypeLits
+:k 1
+1 :: Natural
+
+:k (1 + 2)
+(1 + 2) :: Natural
+
+:k! (1 + 2)
+(1 + 2) :: Natural = 3
+```
+Since `1` and `2` belong to kind `Nat`, no function can handle them.  Only TF can handle them.  `+` is TF provided by `GHC.TypeLits`.
+
 
 
 ### DF instance can define an ADT
