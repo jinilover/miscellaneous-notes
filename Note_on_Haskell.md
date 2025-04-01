@@ -428,7 +428,7 @@ Basic definition knowledge are assumed.  Observation is summarised:
 * Although the name is "Type" families, TF is not limited to a Type.
 * https://serokell.io/blog/type-families-haskell gave more examples.
 
-### TFs and indexed TFs are used interchangeably
+### TFs are synonymous to indexed TFs
 The parameter variable is the index.  E.g.
 ```Haskell
 type family F a where -- `a` is the index
@@ -442,6 +442,7 @@ F :: Type -> Type
 `a` and `F a` are inferred to be `Type` due to the TF instance implementation.
 
 ### TF for kinds other than `Type`
+#### Example 1
 The index and the TF can be explicitly declared the kind.
 ```Haskell
 type family Not (a :: Bool) :: Bool where
@@ -462,8 +463,55 @@ type family Not a where
 :k Not
 Not :: Bool -> Bool
 ```
-* `'` can be omitted.  Having `'` aims to remind that `True` and `False` are type-level literals here because TF instances only allow **"values" belonging to the parameter's kind**.
-* Kind declaration can be omitted because GHC infers according to the TF instance implementation.
+`'` can be omitted.  Having `'` aims to remind that  `True` and `False` are type-level literals.  Remember that TF instances only accept "values" belonging to the parameter's kind.
+
+#### Example 2
+```Haskell
+type FromMaybe :: a -> Maybe a -> a
+type family FromMaybe d x where
+  FromMaybe d 'Nothing = d
+  FromMaybe _ ('Just x) = x
+
+-- alternatively
+type family FromMaybe d x where
+  FromMaybe d 'Nothing = d
+  FromMaybe _ ('Just x) = x
+
+:k FromMaybe
+FromMaybe :: forall {k}. k -> Maybe k -> k
+-- `k` and `a` are kind variables, they are logically the same.
+
+:k FromMaybe Int 'Nothing
+FromMaybe Int 'Nothing :: Type 
+
+:k FromMaybe Identity 'Nothing
+FromMaybe Identity 'Nothing :: Type -> Type
+
+:k FromMaybe Identity ('Just 'Nothing)
+error: [GHC-83865]
+-- `Identity` kind is `Type -> Type`, but `'Nothing` kind isn't.
+
+:k FromMaybe Identity ('Just Identity)
+FromMaybe Identity ('Just Identity) :: Type -> Type
+
+:k FromMaybe Identity ('Just Maybe)
+FromMaybe Identity ('Just Maybe) :: Type -> Type
+```
+* Evaluate the kind's value using `:k!`.
+* `'` can be omitted from the instances.
+* According to the instances, the first parameter isn't any value of a particular kind, same as the second parameter except it's wrapped by a `Maybe` literal.  Therefore GHC allows the 2 parameters to be any kind except they should be the same.
+
+#### Example 3
+```Haskell
+type family Fst t where
+  Fst '(x, _) = x
+
+:k Fst '( 'True, Maybe)
+Fst '( 'True, Maybe) :: Bool
+
+:k Fst '(Maybe, 'True)
+Fst '(Maybe, 'True) :: Type -> Type
+```
 
 A TF's kind can even be set polymorphically.
 ```Haskell
