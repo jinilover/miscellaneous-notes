@@ -439,24 +439,31 @@ type family F a where -- `a` is the index
 :k F
 F :: Type -> Type
 ```
-`a` and `F a` are inferred to be `Type`.
+`a` and `F a` are inferred to be `Type` due to the TF instance implementation.
 
 ### TF for kinds other than `Type`
-The index and the TF can be explicitly declared the corresponding kind.
+The index and the TF can be explicitly declared the kind.
 ```Haskell
 type family Not (a :: Bool) :: Bool where
-  Not True = False
-  Not _ = True
+  Not 'True = 'False
+  Not _ = 'True
 
 -- alternatively
 type Not :: Bool -> Bool
 type family Not a where
-  Not True = False
-  Not _ = True
+  Not 'True = 'False
+  Not _ = 'True
+
+-- alternatively
+type family Not a where
+  Not 'True = 'False
+  Not _ = 'True
 
 :k Not
 Not :: Bool -> Bool
 ```
+* `'` can be omitted.  Having `'` aims to remind that `True` and `False` are type-level literals here because TF instances only allow **"values" belonging to the parameter's kind**.
+* Kind declaration can be omitted because GHC infers according to the TF instance implementation.
 
 A TF's kind can even be set polymorphically.
 ```Haskell
