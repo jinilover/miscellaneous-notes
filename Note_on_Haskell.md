@@ -363,7 +363,7 @@ When enter a value on GHCi, it tries to display the result using its `Show` by `
 print :: Show a => a -> IO ()
 print x = putStrLn (show x)
 ```
-That explains why `show 'a'` gives `"'a'"` but `'a'` gives `'a'` on GHCi.
+That explains why `show 'a'` is `"'a'"` but `'a'` is `'a'` on GHCi.
 
 ## Type-level programming
 Type-level programming is about promoting values to a kind.  The kind of the promoted values is not `Type`, let's call it custom kind, which is eligible to be converted to `Type` s.t. it can be used in function signatures.
@@ -393,7 +393,7 @@ data Temp (unit :: Unit) = Temp Double
 Temp :: Unit -> Type
 ```
 
-Yet we cannot construct a type of `Temp F` or `Temp C`.  `F` and `C` should be promoted first by enabling `DataKinds`.  Now,
+Yet we cannot construct a type of `Temp F` or `Temp C`.  `F` and `C` should be promoted first by enabling `DataKinds`.  Then we have entered type-level programming,
 ```Haskell
 :k F
 Unit
@@ -416,10 +416,23 @@ It sounds like a pandora's box once `DataKinds` is enabled.  When a value is pre
   * `"hello" :: Symbol` 
   * `Nat` and `Symbol` are kinds provided by `GHC.TypeLits`
   * W/o prefixing `'`, some literals are inferred as type-level literals.  E.g. `True`, `False`, numbers, characters.  
-  * For beginners, using `'` is recommended to remind they are not doing term-level programming.
-  * For seasoned developers, omitting `'` makes the code cleaner.  But stay mindful of what’s happening under the hood.
+  
+### Homogeneity in a list
+A list only allows homogeneous items.  The meaning of homogeneity depends on what you are doing.
+* A term-level list is denoted by `[]`.  All its elements should be values having the same **type**, e.g. `[True, False]` where all values have the same **type** `Bool`.
+* A type-level list is denoted by `'[]`.  All its elements should have the same **kind**.  
+  * `:k '[Int, Char]` is `[Type]`.  
+  * `:k '[Identity, IO, Maybe]` is `[Type -> Type]`.
+  * `:k '[1,2,3]` is `[Nat]`.
+  * `:k '[1,2,'c']` is invalid due to mix of `Nat` and `Char` kinds.
+  * GHC sometimes infers you are using `'[]` if `'` is omitted but sometimes doesn't.  In term-level programming, `[]` is a **type constructor**, GHC infers `:k [Bool]` as `Type`.  If you want a correct result, you should add back `'`.  If there are multiple elements, GHC infers correctly.  Because under this condition, it's impossible to be a type constructor `[]`, GHC can tell this `[]` is indeed `'[]`.
+  * `[Int, Char, Bool]` is sugar of `Int ': Char ': Bool ': '[]`.
+  * `':`, is analogous to `:`, to pattern match a non-empty type-level list.  GHC can infer it is `':` even `'` is omitted.
+  * `:` is a function to construct a term-level list.  `':` is a special syntax to construct a type-level list.  GHC can infer it is `':` even `'` is omitted.
 
-More problems can be solved by type-level programming.  Many of them apply type families and GADTs, I will leave the discussion to the "Type families" section.
+### Thoughts on type-level programming
+  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you will be lost easily and make mistakes unless you are proficient with type-level programming.  `:k [Bool]` is an example.
+  * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `xs = '[Int, Char]` is invalid.
 
 ## Type families
 Basic definition knowledge are assumed.  Observation is summarised:
