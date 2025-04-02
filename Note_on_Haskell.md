@@ -497,24 +497,27 @@ type family FromMaybe d x where
 FromMaybe :: forall {k}. k -> Maybe k -> k
 -- `k` and `a` are kind variables, they are logically the same.
 
-:k FromMaybe Int 'Nothing
+:k! FromMaybe Int 'Nothing
 FromMaybe Int 'Nothing :: Type 
+= Int
 
-:k FromMaybe Identity 'Nothing
+:k! FromMaybe Identity 'Nothing
 FromMaybe Identity 'Nothing :: Type -> Type
+= Identity
 
-:k FromMaybe Identity ('Just 'Nothing)
+:k! FromMaybe Identity ('Just 'Nothing)
 error: [GHC-83865]
 -- `Identity` kind is `Type -> Type`, but `'Nothing` kind isn't.
 
-:k FromMaybe Identity ('Just Identity)
+:k! FromMaybe Identity ('Just Identity)
 FromMaybe Identity ('Just Identity) :: Type -> Type
+= Identity
 
-:k FromMaybe Identity ('Just Maybe)
+:k! FromMaybe Identity ('Just Maybe)
 FromMaybe Identity ('Just Maybe) :: Type -> Type
+= Maybe
 ```
 * The instances suggest that the first parameter isn't any value of a particular kind, same as the second parameter except it's wrapped by a `Maybe` literal.  Therefore GHC allows the 2 parameters to be any kind except they should be the same.
-* Try evaluating the kind's value using `:k!`.
 * Code compiled even `'` are omitted.
 
 #### Example 3
@@ -529,10 +532,59 @@ Fst '( 'True, Maybe) :: Bool
 Fst '(Maybe, 'True) :: Type -> Type
 ```
 
-A TF's kind can even be set polymorphically.
+#### Example 4
 ```Haskell
-type family ToUnescapingTF (a :: k) :: k
+type family Append xs ys where
+  Append '[]    ys = ys
+  Append (x ': xs) ys = x ': Append xs ys
+
+:k Append
+Append :: [a] -> [a] -> [a]
+
+-- alternatively
+type family (++) xs ys where
+  '[] ++ ys = ys
+  (x ': xs) ++ ys = x ': (xs ++ ys)
+
+:k! [Int, Char, Maybe Bool] ++ [String, Bool]
+[Int, Char, Maybe Bool] ++ [String, Bool] :: [Type]
+= [Int, Char, Maybe Bool, [Char], Bool]
+
+:k! [Int, Char, Maybe Bool] ++ [Bool]
+error: [GHC-83865]
+-- Expected kind ‘[Type]’, but ‘[Bool]’ has kind ‘Type’
+
+-- fix the error
+:k! [Int, Char, Maybe Bool] ++ '[Bool]
+[Int, Char, Maybe Bool] ++ '[Bool] :: [Type]
+= [Int, Char, Maybe Bool, Bool]
+
+:k! [] ++ [Int, Char]
+error: [GHC-83865]
+-- Expecting one more argument to ‘[]’
+
+-- fix the error
+:k! '[] ++ [Int, Char]
+'[] ++ [Int, Char] :: [Type]
+= [Int, Char]
+
+:k! [Maybe] ++ [IO, Maybe]
+error: [GHC-83865]
+-- Expected kind ‘[Type -> Type]’, but ‘[Maybe]’ has kind ‘Type’
+
+-- fix the error
+:k! '[Maybe] ++ [IO, Maybe]
+'[Maybe] ++ [IO, Maybe] :: [Type -> Type]
+= [Maybe, IO, Maybe]
+
+:k! [] ': [IO, Maybe]
+[] ': [IO, Maybe] :: [Type -> Type]
+= [[], IO, Maybe]
 ```
+* `:k Append` should be `??? -> ??? -> ???`.
+* Due to the pattern match on `xs`, `xs` is a type-level list, therefore `[???] -> ??? -> ???`.
+* Since 2nd instance maps to `x ': Append xs ys` which is a type-level list, so `ys` is a type-level list and the kind should be `[???] -> [???] -> [???]`.
+* The instances never state what particular kind "value" contained by `xs` or `ys`.  All elements of a type-level list should have the same kind.  Therefore the kind is inferred as `[a] -> [a] -> [a]`.
 
 ### Compute type-level literals
 After enabling `DataKinds`, non-negative integer are promoted type-level literals.  These type-level literals cannot be computed by using functions.
