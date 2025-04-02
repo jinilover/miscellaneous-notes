@@ -398,11 +398,11 @@ Yet we cannot construct a type of `Temp F` or `Temp C`.  `F` and `C` should be p
 :k F
 Unit
 ```
-`Unit` itself is a kind **only after promotion**.  Its belonging "things" (`F` or `C`) can be passed to `Temp` to construct `Type`.  
+`Unit` itself is a kind **only after promotion**.  Its belonging "values" (`F` or `C`) can be passed to `Temp` to construct `Type`.  
 
 If you are lost, think about:
-* `:k Maybe` is `Type -> Type`.  `Type` is a kind, its belonging "things" is `Bool`, `Char` or so.
-* Similarly, `Unit` is a kind after promotion.  It has the same "rank" as `Type`.  Its belonging "things" are `F` and `C`.
+* `:k Maybe` is `Type -> Type`.  `Type` is a kind, its belonging "values" is `Bool`, `Char` or so.
+* Similarly, `Unit` is a kind after promotion.  It has the same "rank" as `Type`.  Its belonging "values" are `F` and `C`.
 * After promotion, `F` and `C` have the same "rank" as `Bool`, `Char` or so.  Their kinds can be checked using `:k`.
 
 ### Is it a value or a "type"?
@@ -415,7 +415,9 @@ It sounds like a pandora's box once `DataKinds` is enabled.  When a value is pre
   * `3 :: Nat`
   * `"hello" :: Symbol` 
   * `Nat` and `Symbol` are kinds provided by `GHC.TypeLits`
-* Even w/o prefixing `'`, some literals can be recognised as type-level literals.  E.g. `True`, `False`, numbers, characters.
+  * W/o prefixing `'`, some literals are inferred as type-level literals.  E.g. `True`, `False`, numbers, characters.  
+  * For beginners, using `'` is recommended to remind they are not doing term-level programming.
+  * For seasoned developers, omitting `'` makes the code cleaner.  But stay mindful of what’s happening under the hood.
 
 More problems can be solved by type-level programming.  Many of them apply type families and GADTs, I will leave the discussion to the "Type families" section.
 
@@ -463,7 +465,8 @@ type family Not a where
 :k Not
 Not :: Bool -> Bool
 ```
-`'` can be omitted.  Having `'` aims to remind that  `True` and `False` are type-level literals.  Remember that TF instances only accept "values" belonging to the parameter's kind.
+* Code compiled even `'` are omitted.  But developers should stay mindful that they are not doing term-level programming.
+* Remember that TF instances only accept "values" belonging to the parameter's kind.
 
 #### Example 2
 ```Haskell
@@ -497,9 +500,9 @@ FromMaybe Identity ('Just Identity) :: Type -> Type
 :k FromMaybe Identity ('Just Maybe)
 FromMaybe Identity ('Just Maybe) :: Type -> Type
 ```
-* Evaluate the kind's value using `:k!`.
-* `'` can be omitted from the instances.
-* According to the instances, the first parameter isn't any value of a particular kind, same as the second parameter except it's wrapped by a `Maybe` literal.  Therefore GHC allows the 2 parameters to be any kind except they should be the same.
+* The instances suggest that the first parameter isn't any value of a particular kind, same as the second parameter except it's wrapped by a `Maybe` literal.  Therefore GHC allows the 2 parameters to be any kind except they should be the same.
+* Try evaluating the kind's value using `:k!`.
+* Code compiled even `'` are omitted.
 
 #### Example 3
 ```Haskell
