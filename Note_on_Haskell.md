@@ -516,6 +516,10 @@ FromMaybe Identity ('Just Identity) :: Type -> Type
 :k! FromMaybe Identity ('Just Maybe)
 FromMaybe Identity ('Just Maybe) :: Type -> Type
 = Maybe
+
+:k! FromMaybe Identity ('Just 1)
+error: [GHC-83865]
+-- `Identity` kind is `Type -> Type`, but `1` kind is `Nat`.
 ```
 * The instances suggest that the first parameter isn't any value of a particular kind, same as the second parameter except it's wrapped by a `Maybe` literal.  Therefore GHC allows the 2 parameters to be any kind except they should be the same.
 * Code compiled even `'` are omitted.
@@ -527,9 +531,11 @@ type family Fst t where
 
 :k Fst '( 'True, Maybe)
 Fst '( 'True, Maybe) :: Bool
+= True
 
 :k Fst '(Maybe, 'True)
 Fst '(Maybe, 'True) :: Type -> Type
+= Maybe
 ```
 
 #### Example 4
