@@ -431,7 +431,7 @@ A list only allows homogeneous items.  The meaning of homogeneity depends on wha
   * `:` is a function to construct a term-level list.  `':` is a special syntax to construct a type-level list.  GHC can infer it is `':` even `'` is omitted.
 
 ### Thoughts on type-level programming
-  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you will be lost easily and make mistakes unless you are proficient with type-level programming.  `:k [Bool]` is an example.
+  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you will be confused easily unless you are proficient with type-level programming.  `:k [Bool]` and `:k [Bool, Bool]` give different result.
   * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `xs = '[Int, Char]` is invalid.
 
 ## Type families
@@ -478,8 +478,8 @@ type family Not a where
 :k Not
 Not :: Bool -> Bool
 ```
-* Code compiled even `'` are omitted.  But developers should stay mindful that they are not doing term-level programming.
-* Remember that TF instances only accept "values" belonging to the parameter's kind.
+* Code compiled even `'` are omitted.
+* A remind that if the parameter is set the specific kind, the TF instances should only allow corresponding kind "values".
 
 #### Example 2
 ```Haskell
