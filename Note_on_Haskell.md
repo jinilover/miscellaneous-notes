@@ -592,6 +592,60 @@ error: [GHC-83865]
 * Since 2nd instance maps to `x ': Append xs ys` which is a type-level list, so `ys` is a type-level list and the kind should be `[???] -> [???] -> [???]`.
 * The instances never state what particular kind "value" contained by `xs` or `ys`.  All elements of a type-level list should have the same kind.  Therefore the kind is inferred as `[a] -> [a] -> [a]`.
 
+#### Example 5
+So far all TF examples illustrate that all instances of a TF should have the same kind in the corresponding parameter positions and return parameter.  Therefore if one instance forces a specific kind, GHC will fix the entire TF to that kind.  But under rare occasion, this requirement is lifted.
+
+```Haskell
+type family ToUnescapingTF (a :: k) :: k where
+  ToUnescapingTF Char = UnescapingChar
+  ToUnescapingTF (t b :: k) = (ToUnescapingTF t) (ToUnescapingTF b)
+  ToUnescapingTF a = a
+```
+`Char` makes one instance fix on `Type`.  It contradicts with the polymorphic kind on other instances.  There are 2 ways to fix it:
+* Enable `CUSKs` - Complete user-specific kind, forces GHC to accept `k` as a polymorphic kind w/o further inference; Or
+* Add kind signatures as 
+```Haskell
+type ToUnescapingTF :: k -> k
+type family ToUnescapingTF a where
+  ToUnescapingTF Char = UnescapingChar
+  ToUnescapingTF (t b) = (ToUnescapingTF t) (ToUnescapingTF b)
+  ToUnescapingTF a = a
+```
+
+This is an abnormal TF example that lifts the usual requirement on all TF instances.  Unlike kind inference being active, it doesn't infer a "better" kind for you.  It only checks whether the instances match with what you declared.  The responsibility shifts to you who ensure the kinds are valid and safe.  You got to be very careful when you take the explicit kind control.
+
+Sample kind evaluation
+```Haskell
+:k! ToUnescapingTF Char
+ToUnescapingTF Char :: Type
+= UnescapingChar
+
+:k! ToUnescapingTF Int
+ToUnescapingTF Int :: Type
+= Int
+
+:k! ToUnescapingTF (Maybe Char)
+ToUnescapingTF (Maybe Char) :: Type
+= Maybe UnescapingChar
+
+:k! ToUnescapingTF Maybe Int
+ToUnescapingTF Maybe Int :: Type
+= Maybe Int
+
+:k! ToUnescapingTF (Either String)
+ToUnescapingTF (Either String) :: Type -> Type
+= Either [UnescapingChar]
+```
+Explanation to `ToUnescapingTF (Either String)`
+```Haskell
+ToUnescapingTF (Either String) -- it should map to `Type -> Type` in the end
+ = (ToUnescapingTF Either) (ToUnescapingTF String)
+ = Either (ToUnescapingTF [Char])
+ = Either ((ToUnescapingTF []) (ToUnescapingTF Char))
+ = Either ([] UnescapingChar)
+ = Either [UnescapingChar] -- `Type -> Type` QED
+```
+
 ### Compute type-level literals
 After enabling `DataKinds`, non-negative integer are promoted type-level literals.  These type-level literals cannot be computed by using functions.
 
