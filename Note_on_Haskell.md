@@ -456,7 +456,7 @@ F :: Type -> Type
 ```
 `a` and `F a` are inferred to be `Type` due to the TF instance implementation.
 
-### TF for kinds other than `Type`
+### TF isn't only for `Type`
 #### Example 1
 The index and the TF can be explicitly declared the kind.
 ```Haskell
@@ -646,9 +646,7 @@ ToUnescapingTF (Either String) -- it should map to `Type -> Type` in the end
  = Either [UnescapingChar] -- `Type -> Type` QED
 ```
 
-### Compute type-level literals
-After enabling `DataKinds`, non-negative integer are promoted type-level literals.  These type-level literals cannot be computed by using functions.
-
+### TF computes type-level literals
 ```Haskell
 import GHC.TypeLits
 :k 1
@@ -660,9 +658,12 @@ import GHC.TypeLits
 :k! (1 + 2)
 (1 + 2) :: Natural = 3
 ```
-Since `1` and `2` belong to kind `Nat`, no function can handle them.  Only TF can handle them.  `+` is TF provided by `GHC.TypeLits`.
+After enabling `DataKinds`, non-negative integers can be used as type-level literals.  Their kinds aren't `Type`.  Using `:k` makes GHC aware that `1` and `2` are type-level literals belonging to kind `Nat`.  They should be computed using TF.  `+` is a TF provided by `GHC.TypeLits`.
 
-
+### TF helps to validate data
+Type-level literals can be used for dependant types.  The design pattern is:
+* Use TF to compute the type-level literals.
+* Convert the kind of the computed type-level value to a `Type` using GADT.  
 
 ### DF instance can define an ADT
 ```Haskell
