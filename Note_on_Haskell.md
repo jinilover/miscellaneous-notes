@@ -877,12 +877,38 @@ Without GADT, `I 1` and `B True` produce the same type s.t. `Eq (I 1) (B True)` 
 ```Haskell
 data HList xs where
   HNil :: HList '[]
-  (:&) :: x -> HList xs -> HList (x : xs)
+  (:&) :: x -> HList xs -> HList (x ': xs)
+infixr 5 :&
 ```
 * The type-level literals require all data constructor to specify its own parameterised type.  Therefore GADT, not ADT, support this requirement.
 * There is one parameter, we expect `:k HList` gives `??? -> Type`.
 * From the the 2 data constructor types, the type-level literals are either `'[]` or `x : xs`.  Therefore `:k HList` should be `[???] -> Type`.
-* `(:&)` indicates that the data structure is formed by elements of kind `Type`.  Therefore `:k HList` is `[Type] -> Type`.
+* Given the use of `x` in `(:&)`, it suggests that the data structure is formed by elements of kind `Type`.  Therefore `:k HList` is `[Type] -> Type`.
+* This capability enables the synery of GADT with TF to provide a type-safe data validation  
+
+Remind that a TF can be written as 
+```Haskell
+type family (++) xs ys where
+  '[] ++ ys = ys
+  (x ': xs) ++ ys = x ': (xs ++ ys)
+```
+
+By using `HList` and `(++)`, a dependant type solution can now be implemented as
+```Haskell
+happend :: HList xs -> HList ys -> HList (xs ++ ys)
+happend HNil ysHlist = ysHlist
+happend (x :& xsHtail) ysHlist = x :& happend xsHtail ysHlist
+```
+* Note the responsbilities taken by `HList` and `(++)`.
+* When `HList xs` is `HNil`
+  * `xs` "type" is `'[]` according to the GADT.
+  * `happend` returned type is `HList ('[] ++ ys)`, mapped to `HList ys` according to the TF.
+  * The `happend` implementation returns `ysHlist` whose type is `HList ys`. QED
+* When `HList xs` is `(:&) x xsHtail`
+  * suppose `xsHtail'` is the "type" inside `xsHtail`.
+  * the `xs` "type" is `x ': xsHtail'` according to the GADT.
+  * `happend` returned type is `HList ((x ': xsHtail') ++ ys)`, mapped to `HList (x ': (xsHtail' ++ ys))` according to the TF.
+  * The `happend` implementation returns `x :& happend xsHtail ysHlist`. `happend xsHtail ysHlist` type is `HList (xsHtail' ++ ys)`, therefore final type is `HList (x ': (xsHtail' ++ ys))` according to the GADT.  QED
 
 ### 7. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
