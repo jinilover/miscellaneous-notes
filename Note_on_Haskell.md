@@ -366,7 +366,7 @@ print x = putStrLn (show x)
 That explains why `show 'a'` is `"'a'"` but `'a'` is `'a'` on GHCi.
 
 ## Type-level programming
-Type-level programming is about promoting values to a kind.  The kind of the promoted values is not `Type`, let's call it custom kind, which is eligible to be converted to `Type` s.t. it can be used in function signatures.
+Type-level programming is about promoting values to a kind's value.  The kind of the promoted values is not `Type`, let's call it custom kind, which is eligible to be converted to `Type` s.t. it can be used in function signatures.
 
 ### Why promoting values to a kind?
 ```Haskell
@@ -407,15 +407,13 @@ If you are lost, think about:
 
 ### Is it a value or a "type"?
 It sounds like a pandora's box once `DataKinds` is enabled.  When a value is prefixed by `'`, it is a "type".
-* E.g. `'[]` is a "type", **not** a value.  Remeber that `'[]`'s kind is not `Type` yet.  But a type constructor can convert it to a type, like how `Temp` convert `Unit` to `Type`.
-* `(:)` can be used to present a "type".  Under this condition, it is just a type-level list, i.e. a tag, not a cons operator.  An coming GADT example will explain.
+* E.g. `'[]` is not a value.  It is a particular kind's value or sometimes we call it "type".  Also remember that `'[]`'s kind is not `Type` yet, it can be converted to a type using a type constructor.  `Temp` is an example that converts `Unit` to `Type`.
 * Type-level literal examples
   * `'[]`
-  * `(:)`
   * `3 :: Nat`
   * `"hello" :: Symbol` 
   * `Nat` and `Symbol` are kinds provided by `GHC.TypeLits`
-  * W/o prefixing `'`, some literals are inferred as type-level literals.  E.g. `True`, `False`, numbers, characters.  
+  * W/o prefixing `'`, some literals are inferred as type-level literals.  E.g. `True`, `False`, numbers, characters.  We need to be careful to present a type-level literal when omitting `'`.
   
 ### Homogeneity in a list
 A list only allows homogeneous items.  The meaning of homogeneity depends on what you are doing.
@@ -431,7 +429,7 @@ A list only allows homogeneous items.  The meaning of homogeneity depends on wha
   * `:` is a function to construct a term-level list.  `':` is a special syntax to construct a type-level list.  GHC can infer it is `':` even `'` is omitted.
 
 ### Thoughts on type-level programming
-  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you will be confused easily unless you are proficient with type-level programming.  `:k [Bool]` and `:k [Bool, Bool]` give different result.
+  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you may be confused unless you are proficient with type-level programming.  E.g. you may forget that `:k [Bool]` and `:k [Bool, Bool]` give different results.
   * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `xs = '[Int, Char]` is invalid.
 
 ## Type families
