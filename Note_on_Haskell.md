@@ -644,6 +644,53 @@ ToUnescapingTF (Either String) -- it should map to `Type -> Type` in the end
  = Either [UnescapingChar] -- `Type -> Type` QED
 ```
 
+#### Example 6
+This is a pretty trivial TF usage, maybe be too trivial to be overlooked.  Pattern matching on type (and type constructor) can be done using TF.
+
+```Haskell
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+
+data Rating = Bad | Good | Great
+  deriving Show
+
+data ServiceStatus = Ok | Down
+  deriving Show
+
+data Get a
+
+data Capture a
+
+data a :<|> b = a :<|> b
+infixr 8 :<|>
+
+data (a :: k) :> b
+infixr 9 :>
+
+type BookID = Int
+
+type BookInfoAPI =     Get ServiceStatus
+                       :<|> "title" :> Capture BookID :> Get String
+                       :<|> "year" :> Capture BookID :> Get Int
+                       :<|> "rating" :> Capture BookID :> Get Rating
+
+type family Server layout
+type instance Server (Get a) = HandlerAction a
+type instance Server (a :<|> b) = Server a :<|> Server b
+type instance Server ((s :: Symbol) :> r) = Server r
+type instance Server (Capture a :> r) = a -> Server r
+```
+
+* `data Get a`, `data Capture a`, `data (a :: k) :> b` have no habitant but they are not useless.  They are used for tagging purpose.
+* We can see how the type (or type constructor) are "pattern matched" by corresponding `Server` TF instance.
+* TF instance can pattern match particular kind values.  That's why `DataKinds` is enabled.
+* Since `DataKinds` is enabled, `Server` TF instances can be written by matching the concrete type-level values.
+```Haskell
+type instance Server ("title" :> r) = Server r
+type instance Server ("year" :> r) = Server r
+type instance Server ("rating" :> r) = Server r
+```
+
 ### TF computes type-level literals
 ```Haskell
 import GHC.TypeLits
