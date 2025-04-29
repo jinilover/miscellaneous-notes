@@ -645,7 +645,7 @@ ToUnescapingTF (Either String) -- it should map to `Type -> Type` in the end
 ```
 
 #### Example 6
-This is a pretty trivial TF usage, maybe be too trivial to be overlooked.  Pattern matching on type (and type constructor) can be done using TF.
+This is a pretty trivial TF usage - pattern matching on type (and type constructor) by TF instances.
 
 ```Haskell
 {-# LANGUAGE DataKinds #-}
@@ -682,14 +682,15 @@ type instance Server (Capture a :> r) = a -> Server r
 ```
 
 * `data Get a`, `data Capture a`, `data (a :: k) :> b` have no habitant but they are not useless.  They are used for tagging purpose.
-* We can see how the type (or type constructor) are "pattern matched" by corresponding `Server` TF instance.
-* TF instance can pattern match particular kind values.  That's why `DataKinds` is enabled.
+* Type (or type constructor) are "pattern matched" by corresponding TF instance.
+* Remember that TF is not only used for `Type`, it can also pattern match particular kind values.  That's why `DataKinds` is enabled.
 * Since `DataKinds` is enabled, `Server` TF instances can be written by matching the concrete type-level values.
 ```Haskell
 type instance Server ("title" :> r) = Server r
 type instance Server ("year" :> r) = Server r
 type instance Server ("rating" :> r) = Server r
 ```
+If `Server` instance is defined for a particular `Symbol` value such as `"title"`, it will do compilation check of the path value in `BookInfoAPI`.
 
 ### TF computes type-level literals
 ```Haskell
