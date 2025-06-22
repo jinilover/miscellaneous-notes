@@ -383,7 +383,7 @@ tempC = Temp 0.0 :: Temp C
 
 Semantically `a` should be limited to `F` and `C` only.  But they are **independent** types.  One solution is defining a type class for them but this introduces boilerplate.  What if we add `K` later?
 
-We can relate `F` and `C` by defining them as values.
+A simpler solution is defining `F` and `C` as values.
 ```Haskell
 data Unit = F | C
 data Temp (unit :: Unit) = Temp Double
@@ -393,7 +393,7 @@ data Temp (unit :: Unit) = Temp Double
 Temp :: Unit -> Type
 ```
 
-Yet we cannot construct a type of `Temp F` or `Temp C`.  `F` and `C` should be promoted first by enabling `DataKinds`.  Then we have entered type-level programming,
+Yet we cannot construct a type `Temp F` or `Temp C`.  `F` and `C` should be promoted first by enabling `DataKinds`.  Then we have entered type-level programming,
 ```Haskell
 :k F
 Unit
@@ -406,8 +406,8 @@ If you are lost, think about:
 * After promotion, `F` and `C` have the same "rank" as `Bool`, `Char` or so.  Their kinds can be checked using `:k`.
 
 ### Is it a value or a "type"?
-It sounds like a pandora's box once `DataKinds` is enabled.  When a value is prefixed by `'`, it is a "type".
-* E.g. `'[]` is not a value.  It is a particular kind's value or sometimes we call it "type".  Also remember that `'[]`'s kind is not `Type` yet, it can be converted to a type using a type constructor.  `Temp` is an example that converts `Unit` to `Type`.
+Pay attention when `DataKinds` is enabled because a value can be a "type" as well.  To avoid confusion, we can prefix a value with `'` to denote it as a "type".
+* E.g. `'[]` is not a value.  Like `F`, it is a "type".  Also remember that `'[]`'s kind is not `Type` yet, it can be converted to a type using a type constructor.  `Temp` is an example that converts `Unit` to `Type`.
 * Type-level literal examples
   * `'[]`
   * `3 :: Nat`
@@ -430,7 +430,7 @@ A list only allows homogeneous items.  The meaning of homogeneity depends on wha
 
 ### Thoughts on type-level programming
   * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you may be confused unless you are proficient with type-level programming.  E.g. you may forget that `:k [Bool]` and `:k [Bool, Bool]` give different results.
-  * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `xs = '[Int, Char]` is invalid.
+  * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `:k '[Int, Char]` returns `[Type]`.  But `xs = '[Int, Char]` is invalid because this is an assignment in term-value programming only.
 
 ## Type families
 Basic definition knowledge are assumed.  Observation is summarised:
