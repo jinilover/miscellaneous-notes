@@ -527,6 +527,9 @@ error: [GHC-83865]
 type family Fst t where
   Fst '(x, _) = x
 
+:k Fst
+Fst :: (k1, k2) -> k1
+
 :k Fst '( 'True, Maybe)
 Fst '( 'True, Maybe) :: Bool
 = True
@@ -574,7 +577,7 @@ error: [GHC-83865]
 
 :k! [Maybe] ++ [IO, Maybe]
 error: [GHC-83865]
--- Expected kind ‘[Type -> Type]’, but ‘[Maybe]’ has kind ‘Type’
+-- Expected kind ‘[Type -> Type]’, but ‘[]’ in ‘[Maybe]’ is a type constructor, not type-level literal, expecting a type argument.
 
 -- fix the error
 :k! '[Maybe] ++ [IO, Maybe]
@@ -587,20 +590,24 @@ error: [GHC-83865]
 ```
 * `:k Append` should be `??? -> ??? -> ???`.
 * Due to the pattern match on `xs`, `xs` is a type-level list, therefore `[???] -> ??? -> ???`.
-* Since 2nd instance maps to `x ': Append xs ys` which is a type-level list, so `ys` is a type-level list and the kind should be `[???] -> [???] -> [???]`.
+* Since 2nd instance maps to `x ': Append xs ys` which is a type-level list, so is `ys` as indicated in the 1st instance.  Therefore the kind should be `[???] -> [???] -> [???]`.
 * The instances never state what particular kind "value" contained by `xs` or `ys`.  All elements of a type-level list should have the same kind.  Therefore the kind is inferred as `[a] -> [a] -> [a]`.
 
 #### Example 5
-So far all TF examples illustrate that all instances of a TF should have the same kind in the corresponding parameter positions and return parameter.  Therefore if one instance forces a specific kind, GHC will fix the entire TF to that kind.  But under rare occasion, this requirement is lifted.
+So far all TF examples illustrate that all instances of a TF should have the same kind in the corresponding parameter positions and return parameter.  Therefore if one instance limits to a specific kind, GHC will fix the entire TF to that kind.  But under rare occasion, this requirement is lifted.
 
 ```Haskell
+newtype UnescapingChar = UnescapingChar {unescapingChar :: Char}
+
 type family ToUnescapingTF (a :: k) :: k where
-  ToUnescapingTF Char = UnescapingChar
+  ToUnescapingTF Char = UnescapingChar 
+  -- error: `Char` and `UnescapingChar` are types!  Contradicts with the polymorphic kind
   ToUnescapingTF (t b :: k) = (ToUnescapingTF t) (ToUnescapingTF b)
+  -- error: `t` has kind `k -> k`
   ToUnescapingTF a = a
 ```
-`Char` makes one instance fix on `Type`.  It contradicts with the polymorphic kind on other instances.  There are 2 ways to fix it:
-* Enable `CUSKs` - Complete user-specific kind, forces GHC to accept `k` as a polymorphic kind w/o further inference; Or
+There are 2 ways to fix it:
+* Enable `CUSKs` - Complete user-specific kind, forces GHC to accept `k` as a polymorphic kind __w/o further inference__; Or
 * Add kind signatures as 
 ```Haskell
 type ToUnescapingTF :: k -> k
@@ -610,7 +617,7 @@ type family ToUnescapingTF a where
   ToUnescapingTF a = a
 ```
 
-This is an abnormal TF example that lifts the usual requirement on all TF instances.  Unlike kind inference being active, it doesn't infer a "better" kind for you.  It only checks whether the instances match with what you declared.  The responsibility shifts to you who ensure the kinds are valid and safe.  You got to be very careful when you take the explicit kind control.
+This is an unusual TF example that lifts the usual requirement on all TF instances, GHC can't infer the "best" kind for you.  It only checks whether the instances match with what you declared.  Now it's your responsibility to ensure the kinds are valid and safe.  You got to be very careful in taking the explicit kind control.
 
 Sample kind evaluation
 ```Haskell
@@ -636,7 +643,7 @@ ToUnescapingTF (Either String) :: Type -> Type
 ```
 Explanation to `ToUnescapingTF (Either String)`
 ```Haskell
-ToUnescapingTF (Either String) -- it should map to `Type -> Type` in the end
+ToUnescapingTF (Either String)
  = (ToUnescapingTF Either) (ToUnescapingTF String)
  = Either (ToUnescapingTF [Char])
  = Either ((ToUnescapingTF []) (ToUnescapingTF Char))
@@ -681,16 +688,16 @@ type instance Server ((s :: Symbol) :> r) = Server r
 type instance Server (Capture a :> r) = a -> Server r
 ```
 
-* `data Get a`, `data Capture a`, `data (a :: k) :> b` have no habitant but they are not useless.  They are used for tagging purpose.
+* `data Get a`, `data Capture a`, `data (a :: k) :> b` have no habitant because they are used for tagging purpose.
 * Type (or type constructor) are "pattern matched" by corresponding TF instance.
-* Remember that TF is not only used for `Type`, it can also pattern match particular kind values.  That's why `DataKinds` is enabled.
-* Since `DataKinds` is enabled, `Server` TF instances can be written by matching the concrete type-level values.
+* Remember that TF is not only used for `Type`, it can also pattern match any kind value, e. g. `"title"` of kind `Symbol`.  That's why `DataKinds` is enabled.
+* Since `DataKinds` is enabled, a `Server` TF instance can match a type-level literal.
 ```Haskell
 type instance Server ("title" :> r) = Server r
 type instance Server ("year" :> r) = Server r
 type instance Server ("rating" :> r) = Server r
 ```
-If `Server` instance is defined for a particular `Symbol` value such as `"title"`, it will do compilation check of the path value in `BookInfoAPI`.
+Given the above instances, compilation will be failed if the path value in `BookInfoAPI` is neither `"title"`, `"year"` nor `"rating"`, 
 
 ### TF computes type-level literals
 ```Haskell
@@ -704,7 +711,7 @@ import GHC.TypeLits
 :k! (1 + 2)
 (1 + 2) :: Natural = 3
 ```
-After enabling `DataKinds`, non-negative integers can be used as type-level literals.  Their kinds aren't `Type`.  Using `:k` makes GHC aware that `1` and `2` are type-level literals belonging to kind `Nat`.  They should be computed using TF.  `+` is a TF provided by `GHC.TypeLits`.
+After enabling `DataKinds`, non-negative integers can be used as type-level literals.  Their kinds are `Natural` (or `Nat`).  Using `:k` makes GHC aware that `1` and `2` are type-level literals.  Type-level literals are computed using TF.  `+` is a TF provided by `GHC.TypeLits`.
 
 ### TF helps to validate data
 Type-level literals can be used for dependant types.  The design pattern is:
