@@ -744,14 +744,16 @@ processInts :: (a -> a) -> [Int] -> [Int]
 processInts f = map f
 ```
 
-Compilation failed.  The above code is indeed
+Compilation failed.  The above code is de-sugared as
 ```Haskell
+-- Code 1
 processInts :: forall a. (a -> a) -> [Int] -> [Int]
 processInts f = map f
 ```
 
 It compiles if the scope of `forall` is changed as
-```Haskell
+```
+-- Code 2
 processInts :: (forall a. a -> a) -> [Int] -> [Int]
 processInts f = map f
 ```
@@ -759,9 +761,8 @@ processInts f = map f
 Reasons: 
 * The `forall` scope determines what function level `a` is universally quantified at.
 * The function caller determines what `a` is.
-
-In first case, `a` is universally quantified at `processInts`.  i.e. `a` is determined by the `processInts` caller but the `(a -> a)` passed by the caller may not satisify the implementation requirement.  
-In second case, `a` is universally quantified at `f`.  i.e. `a` is determined by the `f` caller which in this case is the `processInts` implementation.  Therefore it compiles.  If the implementation doesn't call `f`, it will be somewhere else, not necessarily the `processInts` caller, determines `a`.
+* In Code 1, `a` is universally quantified at `processInts` level.  i.e. `a` is determined by the `processInts` caller, it is possible for the caller to pass, say, `Char -> Char`, which doesn't work for `map f`, therefore GHC fails the compilation.  It's obvious the `f` caller determines `a`.
+* Code 2 is the solution, `a` is universally quantified at `f` level.  This allows the `f` caller to determine `a`.
 
 #### Example 2
 ```Haskell
@@ -769,7 +770,7 @@ applyToTuple :: ([a] -> Int) -> ([b], [c]) -> (Int, Int)
 applyToTuple f (x, y) = (f x, f y)
 ```
 
-Compilation failed due to same reason.  The code is indeed
+Compilation failed due to same reason.  The code is de-sugared as
 ```Haskell
 applyToTuple :: forall a b c. ([a] -> Int) -> ([b], [c]) -> (Int, Int)
 applyToTuple f (x, y) = (f x, f y)
@@ -780,11 +781,6 @@ It compiles if the scope of `forall` is changed as
 applyToTuple :: (forall a. [a] -> Int) -> ([b], [c]) -> (Int, Int)
 applyToTuple f (x, y) = (f x, f y)
 ```
-
-Note for the modified `applyToTuple`:
-* A variable is **universally quantified** when the consumer of the expression it appears in can choose what it will be.  E.g. `b` and `c`.  Because `applyToTuple` users can choose what the types `b` and `c` are.
-* A variable is **existentially quantified** when the consumer of the expression it appears in have to deal with the fact that the choice was made for him.  E.g. `a`.  Because it has to deal wih any type given to it.
-* Once entered inside `applyToTuple`, `b` and `c` are then **existentially quantified** because this function user has already chosen the types from calling.
 
 Reference:
 * https://markkarpov.com/post/existential-quantification.html
