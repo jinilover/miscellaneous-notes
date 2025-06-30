@@ -428,9 +428,12 @@ A list only allows homogeneous items.  The meaning of homogeneity depends on wha
   * `':`, is analogous to `:`, to pattern match a non-empty type-level list.  GHC can infer it is `':` even `'` is omitted.
   * `:` is a function to construct a term-level list.  `':` is a special syntax to construct a type-level list.  GHC can infer it is `':` even `'` is omitted.
 
-### Thoughts on type-level programming
-  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But you may be confused unless you are proficient with type-level programming.  E.g. you may forget that `:k [Bool]` and `:k [Bool, Bool]` give different results.
-  * The syntax of working on type-level "values" or literals is similar to term-level.  But never mix up their purposes.  E.g. `:k '[Int, Char]` returns `[Type]`.  But `xs = '[Int, Char]` is invalid because this is an assignment in term-value programming only.
+### Be careful on type-level programming syntax
+  * Omitting `'` is a two-bladed sword.  Code is cleaner w/o `'`.  But it could be confusing unless the whole team is proficient with type-level programming.  E.g. you can easily forget that `:k [Bool]` and `:k [Bool, Bool]` are different.
+  * The syntax of working on type-level literals is like term-level values'.  But they serve for different purposes.
+    * E.g. `:k '[Int, Char]` returns `[Type]`.  
+    * `xs = '[Int, Char]`, `:t '[Int, Char]`, `:t '[1,2]` give compilation error because `=` and `:t` are term-level programming.
+    * Similarly, `':` is to construct type-level literals or pattern match non-empty type-level list.  `:k 1 ': [1,2]` compiles but `:t 1 ': [1,2]` failed.
 
 ## Type families
 Basic definition knowledge are assumed.  Observation is summarised:
