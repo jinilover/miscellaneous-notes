@@ -962,7 +962,7 @@ https://wiki.haskell.org/Data_declaration_with_constraint
 
 ### 6. Generalized Algebraic Data Types (GADTs)
 #### Basic idea
-A parameterised ADT enforces all its constructors to have the **same parameterised type**.  GADT lifts this restriction to allow each of its constructor to specify its own parameterised type.  
+A parameterised ADT enforces all its constructors to have the **same parameterised type**.  GADT lifts this restriction to allow each of its constructor to specify its parameterised type.  
 ```Haskell
 data Expr a where
   I   :: Int  -> Expr Int
@@ -972,9 +972,13 @@ data Expr a where
   Eq  :: Eq a => Expr a -> Expr a -> Expr Bool
 ```
 
-Without GADT, `I 1` and `B True` produce the same type s.t. `Eq (I 1) (B True)` compiles.  But GADT enables compilation error.  
+* If this is ADT, `I 1` and `B True` will produce the same type, `Eq (I 1) (B True)` will compile which doesn't make sense.  
+* GADT allows each constructor to specify its parameterised type.  Therefore
+  * `I 1` type is `Expr Int`
+  * `B True` type is `Expr Bool`
+  * `Eq` requires both parameters to have the same type, `Eq (I 1) (B True)` fails compilation.
 * For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
-* Since GHC 9.6.5 or maybe earlier, `GADTs` is not required to be enabled to define a GADT.
+* Since GHC 9.6.5 or maybe earlier, `GADTs` extension is not required to define a GADT.
 
 #### Support type-level literals
 ```Haskell
@@ -983,11 +987,11 @@ data HList xs where
   (:&) :: x -> HList xs -> HList (x ': xs)
 infixr 5 :&
 ```
-* The type-level literals require all data constructor to specify its own parameterised type.  Therefore GADT, not ADT, support this requirement.
+* Each data structor has different parameterised type.  Only GADT supports this requirement.
 * There is one parameter, we expect `:k HList` gives `??? -> Type`.
-* From the the 2 data constructor types, the type-level literals are either `'[]` or `x : xs`.  Therefore `:k HList` should be `[???] -> Type`.
-* Given the use of `x` in `(:&)`, it suggests that the data structure is formed by elements of kind `Type`.  Therefore `:k HList` is `[Type] -> Type`.
-* This capability enables the synery of GADT with TF to provide a type-safe data validation  
+* The data constructors indicate the type-level literals are either `'[]` or `x ': xs`.  Therefore `:k HList` should be `[???] -> Type`.
+* `(:&)` is a function type, therefore `x`'s kind is `Type` and thus `:k HList` is `[Type] -> Type`.
+* We will see how GADT works with TF to perform type-safe data validation  .
 
 Remind that a TF can be written as 
 ```Haskell
@@ -1002,7 +1006,7 @@ happend :: HList xs -> HList ys -> HList (xs ++ ys)
 happend HNil ysHlist = ysHlist
 happend (x :& xsHtail) ysHlist = x :& happend xsHtail ysHlist
 ```
-* Note the responsbilities taken by `HList` and `(++)`.
+* Note the responsbilities taken by GADT `HList` and TF `(++)`.
 * When `HList xs` is `HNil`
   * `xs` "type" is `'[]` according to the GADT.
   * `happend` returned type is `HList ('[] ++ ys)`, mapped to `HList ys` according to the TF.
