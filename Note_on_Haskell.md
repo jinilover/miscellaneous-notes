@@ -721,6 +721,57 @@ Type-level literals can be used for dependant types.  The design pattern is:
 * Use TF to compute the type-level literals.
 * Convert the kind of the computed type-level value to a `Type` using GADT.  
 
+### Injectivity
+```Haskell
+type family F a
+  F Int  = Bool
+  F Char = String
+```
+* If `F a` is `Bool`, we can tell `a` is `Int`.
+* If `F a` is `String`, we can tell `a` is `Char`.
+* `F` is injective.
+
+```Haskell
+type family F a
+  F Int  = Bool
+  F Char = String
+  F Bool = String
+```
+* `F` is not injective.
+
+GHC can't infer injectvity because a TF can be complex or recursive.  `TypeFamilyDependencies` is required to inform GHC `F` is injective.
+```Haskell
+type family F a = r | r -> a where
+  F Int  = Bool
+  F Char = String
+```
+
+#### Why injectivity matters?
+```Haskell
+type family F a where
+  F Int  = Bool
+  F Char = String
+
+class TC a where
+  f :: F a -> Maybe (IO String)
+
+instance TC Int where
+  f True = Just $ pure "True"
+  f False = Nothing
+
+instance TC Char where
+  f "a" = Nothing
+  f _ = Just $ pure "hey!!"
+```
+* It compliles with error `‘F’ is a non-injective type family, To defer the ambiguity check to use sites, enable AllowAmbiguousTypes`.
+* When you call `f True`, `F a` is `Bool`, but GHC can't infer `a`.
+* Solution 1 is using `AllowAmbiguousTypes` and `@` to specify the type, say, `f @Int True`.
+* Solution 2 is adding `Proxy a` to `f` signature to pass type information in calling `f`.
+* Solution 3 is using `TypeFamilyDependencies`, type information is not required in calling `f`.
+
+#### Sometimes a TF can't be explicitly stated injective
+E.g. https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs, `Server` can't be injective.  `Proxy` is used to pass the type information.  Alternatively, it can be done by using `AllowAmbiguousTypes` and `@`.
+
 ### DF instance can define an ADT
 ```Haskell
 data family Foo a
