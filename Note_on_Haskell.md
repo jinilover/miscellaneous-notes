@@ -355,7 +355,7 @@ The code is fixed by adding `forall`
 unit :: forall u. UnitName u => Temp u -> String
 unit _ = unitName (Proxy :: Proxy u)
 ```
-`forall` broadens the scope of `u` from the type signature to the function implementation as well.  Since GHC 9.6.5 or maybe earlier, `ScopedTypeVariables` is not required in order to broaden the type variable scope.
+`forall` broadens the scope of `u` from the type signature to the function implementation as well.  Since GHC 9.6.5 or maybe earlier, `ScopedTypeVariables` is enabled automatically to broaden the type variable scope.
 
 ## `Show` 101
 When enter a value on GHCi, it tries to display the result using its `Show` by `print` implicitly.  
@@ -789,8 +789,8 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 * `StandaloneDeriving` p. 31
 * `NoImplicitPrelude` p. 105
 
-### 1. `forall` and RankNTypes
-Use `forall` to implement the idea of arbitrary-rank polymorphism.  I found `RankNTypes` is inferred w/o enabling the extension since GHC 9.6.5 or maybe earlier.
+### 1. `forall` and `RankNTypes`
+Use `forall` to implement the idea of arbitrary-rank polymorphism.  Since GHC 9.6.5 or maybe earlier, `RankNTypes` is enabled automatically.
 
 #### Example 1
 ```Haskell
@@ -978,7 +978,7 @@ data Expr a where
   * `B True` type is `Expr Bool`
   * `Eq` requires both parameters to have the same type, `Eq (I 1) (B True)` fails compilation.
 * For more information, refer to https://en.wikibooks.org/wiki/Haskell/GADT.  
-* Since GHC 9.6.5 or maybe earlier, `GADTs` extension is not required to define a GADT.
+* Since GHC 9.6.5 or maybe earlier, `GADTs` is enabled automatically.
 
 #### Support type-level literals
 ```Haskell
@@ -1169,13 +1169,13 @@ class UnitName u where
 The reason the function `unitName` doesn't have an argument depending on the type variable `u` abstracted by the type class.  Enabling `AllowAmbiguousTypes` makes it compile.  However, the function still doesn't know the concrete type (or kind in general) when it's called.
 
 ### 16. `TypeApplications`
-It addresses the problem mentioned in the previous section.  Even the code compiles, `unitName` doesn't have an argument depending on the type variable targetted by the type class, we can't call it.  Enabling `TypeApplications` solves the problem.  Suppose there is a concrete type, say, `F` and its `UnitName` instance, it can be called as
-```
-unitName @F
+Even `UnitName` compiles by `AllowAmbiguousTypes`, we have to pass the type information to call `unitName`.  Enabling `TypeApplications` and using `@` allow us to do so.  E.g.
+```Haskell
+unitName @F -- it will call `unitName` on `F` instance
 ```
 
-The `UnitName` example illustrates how to use `AllowAmbiguousTypes` and `TypeApplications` to carry type information w/o requiring a value of that type.  An alternative solution is using `Data.Proxy` as
-```
+Since GHC 9.6.5 or maybe earlier, `TypeApplications` is enabled automatically.  Before `TypeApplications` is released, an older solution is using `Data.Proxy`.  E.g.
+```Haskell
 import Data.Proxy
 
 class UnitName u where
