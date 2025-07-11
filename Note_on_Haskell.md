@@ -1162,7 +1162,7 @@ Note: `Show`, `Eq`, `Ord` have built-in support for deriving, `DeriveAnyClass` i
 
 ### 15. `AllowAmbiguousTypes`
 The following code doesn't compile.
-```
+```Haskell
 class UnitName u where
   unitName :: String
 ```
@@ -1180,18 +1180,20 @@ import Data.Proxy
 
 class UnitName u where
   unitName :: Proxy u -> String
-```
-Suppose there is a type `F` and its `UnitName` instance, the function can be called as
-```
+
 unitName (Proxy :: Proxy F)
 ```  
 
 **Note on using `@` when `TypeApplications` enabled**  
-* If the function is polymorphic, we can use `@`.  This function is not necessarily from a type class such as `unitName`
-* `@` is usually placed right after the function name
+* If the function is polymorphic, we can use `@`.
+* `@` is placed right after the function name
   * `read @Int "42"`
   * `map @Int show [1, 2, 3]` - although it's not needed given the type inference
 * What if there are multiple type variables such as `fmap :: Functor f => (a -> b) -> f a -> f`?  The order will be `fmap @[] @Int @String show [1,2,3]`.
+* As discussed in injective TF, `Proxy` is used in  https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs.  The alternative solution is using `AllowAmbiguousTypes` and `@`.  Personally I prefer it.
+  * Name `Proxy` makes its purpose not trivial to people who rarely use `Proxy`.
+  * Using `@` is much simpler than tedious `(Proxy :: Proxy TypeInfo)`.
+  * Type information is after `@`.  Newbie can guess out the purpose easily.
 
 ### 17. `ConstraintKinds`
 `type Show' a = Show a` gets compilation error.  Fix it by enabling `ConstraintKinds`.  
