@@ -1185,7 +1185,7 @@ Even `UnitName` compiles by `AllowAmbiguousTypes`, we have to pass the type info
 unitName @F -- it will call `unitName` on `F` instance
 ```
 
-Since GHC 9.6.5 or maybe earlier, `TypeApplications` is enabled automatically.  Before `TypeApplications` is released, an older solution is using `Data.Proxy`.  E.g.
+Since GHC 9.6.5 or maybe earlier, `TypeApplications` is enabled automatically.  Before `TypeApplications` was released, the solution was using `Proxy`.  E.g.
 ```Haskell
 import Data.Proxy
 
@@ -1195,16 +1195,17 @@ class UnitName u where
 unitName (Proxy :: Proxy F)
 ```  
 
-**Note on using `@` when `TypeApplications` enabled**  
+**Note on using `@`**  
 * If the function is polymorphic, we can use `@`.
 * `@` is placed right after the function name
   * `read @Int "42"`
   * `map @Int show [1, 2, 3]` - although it's not needed given the type inference
 * What if there are multiple type variables such as `fmap :: Functor f => (a -> b) -> f a -> f`?  The order will be `fmap @[] @Int @String show [1,2,3]`.
-* As discussed in injective TF, `Proxy` is used in  https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs.  The alternative solution is using `AllowAmbiguousTypes` and `@`.  Personally I prefer it.
-  * Name `Proxy` makes its purpose not trivial to people who rarely use `Proxy`.
-  * Using `@` is much simpler than tedious `(Proxy :: Proxy TypeInfo)`.
-  * Type information is after `@`.  Newbie can guess out the purpose easily.
+* As explained in injective TF, `Proxy` is used in  https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs.  I prefer `@`.
+  * The name `Proxy` doesn't easily tell the purpose to those who rarely use it.
+  * Using `Proxy` mandates an additional parameter to a function.
+  * Using `@` is much simpler than tedious `(Proxy :: Proxy a)`.
+  * Type information is after `@`.  Newbie can guess out the purpose more easily.
 
 ### 17. `ConstraintKinds`
 `type Show' a = Show a` gets compilation error.  Fix it by enabling `ConstraintKinds`.  
