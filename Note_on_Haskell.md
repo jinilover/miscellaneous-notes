@@ -761,6 +761,27 @@ class TC a where
   * Adding `Proxy a` parameter to `f` to tell the type information.  Or
   * Using `TypeFamilyDependencies`.  This is the simplest.  But sometimes a TF can't be explicitly injective.  E.g. https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs, `Server` can't be injective.  The only choices are the other solutions.
 
+### TF purpose - define DSL which is separate from its implementation
+In https://github.com/bravit/hid-examples/blob/master/ch13/api/Api3.hs, TF `Server` is defined to map the types.
+
+```Haskell
+type BookInfoAPI =     Get ServiceStatus
+                       :<|> "title" :> Capture BookID :> Get String
+                       :<|> "year" :> Capture BookID :> Get Int
+                       :<|> "rating" :> Capture BookID :> Get Rating
+```
+
+`Server BookInfoAPI` is
+```Haskell
+type BookInfoAPIImpl = HandlerAction ServiceStatus
+                       :<|> (BookID -> HandlerAction String)
+                       :<|> (BookID -> HandlerAction Int)
+                       :<|> (BookID -> HandlerAction Rating)
+```
+
+* `Server BookInfoAPI`, i.e. `BookInfoAPIImpl`, is the actual type used in a server side function.
+* `Server` is to interpret a type-level DSL, which makes the `BookInfoAPI` purpose, such as web path, request composition, ..., more trivial.
+* It can define another TF, say, `Client`, to interpret the same type-level DSL in a client side function.
 
 ### DF instance can define an ADT
 ```Haskell
