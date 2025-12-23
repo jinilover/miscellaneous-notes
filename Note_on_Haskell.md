@@ -335,6 +335,17 @@ GHC will **automatically call** `fromString :: IsString a => String -> a` for a 
 myText = "hello world" :: Text
 ```
 
+Caution: This convenience is a two-bladed sword.  
+E.g. `initLogEnv :: Namespace -> Environment -> IO LogEnv`
+```
+newtype Namespace = Namespace {unNamespace :: [Text]}
+instance IsString Namespace
+
+newtype Environment = Environment {getEnvironment :: Text}
+instance IsString Environment -- Defined in ‘Katip.Core’
+```
+Both `initLogEnv "MyApp" "production"` and `initLogEnv "production" "MyApp"` compile.
+
 ### 4. `IsList` - requires`OverloadedLists` extension
 GHC will **automatically call** `fromList :: IsList l => [Item l] -> l` for a list literal.  E.g.
 ```
