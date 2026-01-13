@@ -806,8 +806,6 @@ A pragma is a directive to the compiler.  It tells the compiler to enable a lang
 
 ### GHC extensions learnt from "Haskell in depth"
 
-* `OverloadedStrings` p. 14
-* `DeriveAnyClass` p. 24
 * `StandaloneDeriving` p. 31
 * `NoImplicitPrelude` p. 105
 
@@ -912,32 +910,7 @@ Reference:
 * https://markkarpov.com/post/existential-quantification.html
 * https://wiki.haskell.org/Existential_type
 
-### 3. `GeneralizedNewtypeDeriving` - make a type class derivable
-Suppose there is a type class from which an instance has been created for a type.  If there is a newtype contains this type and we want to reuse this type class instance for this newtype, we can use the pragma ```GeneralizedNewtypeDeriving```.
-Example
-```Haskell
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
-class TooMany a where
-  tooMany :: a -> Bool
-
-instance TooMany Int where
-  tooMany n = n > 42
-
-newtype Goats = Goats Int deriving (Eq, Show, TooMany)
-```
-
-Another sample usage of `GeneralizedNewtypeDeriving`
-```
-{-# LANGUAGE GeneralizedNewtypeDeriving  #-}
-newtype MyApp a = MyApp {
-      runApp :: ReaderT WebAPIAuth IO a
-    } deriving (Functor, Applicative, Monad, MonadIO,
-                MonadThrow, MonadCatch, MonadMask,
-                MonadReader WebAPIAuth)
-```
-
-### 4. `InstanceSigs` - allows type signature in defining the type class instance
+### 3. `InstanceSigs` - allows type signature in defining the type class instance
 In defining the type class instance, it is unnecessary and not allowed to write the function type signature.  E.g.
 ```Haskell
 class Functor' f where
@@ -966,7 +939,7 @@ instance Functor' ((->) a) where
   fmap' = (.)
 ```
 
-### 5. Data declaration with constraint
+### 4. Data declaration with constraint
 Type constraints usually happen on functions.  Sometimes it also happens on a data constructor.  Suppose you want to construct a type by using a type argument where this type belongs to a type class.  E.g.
 ```Haskell
 data WeakenFactor a => Weaken a = Weaken { weakenFactor :: a, weakenHealth :: Health }
@@ -982,7 +955,7 @@ data Weaken a where -- starts with data, like class
 
 https://wiki.haskell.org/Data_declaration_with_constraint
 
-### 6. Generalized Algebraic Data Types (GADTs)
+### 5. Generalized Algebraic Data Types (GADTs)
 #### Basic idea
 A parameterised ADT enforces all its constructors to have the **same parameterised type**.  GADT lifts this restriction to allow each of its constructor to specify its parameterised type.  
 ```Haskell
@@ -1039,7 +1012,7 @@ happend (x :& xsHtail) ysHlist = x :& happend xsHtail ysHlist
   * `happend` returned type is `HList ((x ': xsHtail') ++ ys)`, mapped to `HList (x ': (xsHtail' ++ ys))` according to the TF.
   * The `happend` implementation returns `x :& happend xsHtail ysHlist`. `happend xsHtail ysHlist` type is `HList (xsHtail' ++ ys)`, therefore final type is `HList (x ': (xsHtail' ++ ys))` according to the GADT.  QED
 
-### 7. `RecordWildCards` for `{..}` on data constructor having record syntax
+### 6. `RecordWildCards` for `{..}` on data constructor having record syntax
 This is for code simplicity.  E.g.
 ```Haskell
 {-# LANGUAGE RecordWildCards #-}
@@ -1054,7 +1027,7 @@ process Egg{..} _ (_, Just IncreaseTemp) allConsts
 ```
 By using `RecordWildCards`, it doesn't need to assign a variable to `Egg` in order to get its current temperature via `currTemp egg`.
 
-### 8. `ViewPatterns`
+### 7. `ViewPatterns`
 Enable simple syntax to match a pattern that requires another function to process.  E.g.
 ```
 {-# LANGUAGE ViewPatterns #-}
@@ -1077,7 +1050,7 @@ Note:
 * The value to be matched doesn't need to be specified
 * Parentheses must be needed
 
-### 9. `FunctionalDependencies`
+### 8. `FunctionalDependencies`
 It is used on multiple parameter type classes.  
 E.g. `class Monad m => MonadError e m | m -> e where`, `m` determines `e`, it means for a given `m` value, it should be related to at most one `e` value in the `MonadError` type class.  E.g. when `instance MonadError IOException IO where` is defined, `instance MonadError String IO where` will get compilation error.
 
@@ -1115,7 +1088,7 @@ instance Pokemon Grass GrassMove where
 ```
 Meaningless relationship such as `instance Pokemon Fire WaterMove` won't pass the compilation.
 
-### 10. `TypeFamilies`
+### 9. `TypeFamilies`
 Besides `FunctionalDependencies`, `TypeFamilies` is an alternative to type check the pokemon example.
 ```
 {-# LANGUAGE TypeFamilies #-}
@@ -1145,18 +1118,40 @@ References:
 * https://www.schoolofhaskell.com/school/to-infinity-and-beyond/pick-of-the-week/type-families-and-pokemon.
 * http://www.mchaver.com/posts/2017-06-21-type-families.html
 
-### 11. `OverloadedStrings`
+### 10. `OverloadedStrings`
 It has been explained in the section of automatic conversion.
 
-### 12. `OverloadedLists`
+### 11. `OverloadedLists`
 It has been explained in the section of automatic conversion.
 
-### 13. `DeriveGeneric`
+### 12. `DeriveGeneric`
 It has been explained in the section of data type generic representation.
 
-### 14. `DeriveAnyClass`
-Get back to the `aeson` example again.
+### 13. `GeneralizedNewtypeDeriving`, `DeriveAnyClass`, `DerivingStrategies`
+Standard type classes have built-in support for deriving - `Eq`, `Ord`, `Enum`, `Read` `Show`, `Ix`.  No GHC extension is required for `deriving` any of them.
+
+`GeneralizedNewtypeDeriving` only applies on `newtype`.  That is, if the newtype contains a type having an instance, we can make this instance be the newtype instance as well.  
+
+Example
+```Haskell
+class TooMany a where
+  tooMany :: a -> Bool
+
+instance TooMany Int where
+  tooMany n = n > 42
+
+newtype Goats = Goats Int deriving (Eq, Show, TooMany)
+
+newtype MyApp a = MyApp {
+      runApp :: ReaderT WebAPIAuth IO a
+    } deriving (Functor, Applicative, Monad, MonadIO,
+                MonadThrow, MonadCatch, MonadMask,
+                MonadReader WebAPIAuth)
 ```
+Since GHC 9.6.5 or maybe earlier, `GeneralizedNewtypeDeriving` is enabled automatically.  Therefore `deriving` a type class on `newtype` automatically uses the contained type instance.
+
+But a type is sometimes defined using `data`, let's get back to the `aeson` example.
+```Haskell
 {-# LANGUAGE DeriveGeneric #-}
 
 import GHC.Generics (Generic)
@@ -1169,28 +1164,75 @@ instance ToJSON Person
 instance FromJSON Person
 ```
 
-We can remove the last 2 lines by deriving `ToJSON` and `FromJSON` as follows.
-```
+`Person` can derive `ToJSON` and `FromJSON` using `DeriveAnyClass`
+```Haskell
 {-# LANGUAGE DeriveAnyClass #-} 
 {-# LANGUAGE DeriveGeneric #-}
 
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON) 
 
-data Person = Person { name :: String , age :: Int } deriving (Show, Generic, FromJSON, ToJSON)
+data Person = Person { name :: String , age :: Int } 
+  deriving (Show, Generic, FromJSON, ToJSON)
 ```
 
-Note: `Show`, `Eq`, `Ord` have built-in support for deriving, `DeriveAnyClass` is not required for these type classes.
+* `DeriveAnyClass` should be enabled explicitly.
+* `deriving` using `DeriveAnyClass` is possible only via generics (e.g. aeson, dhall) or other means.
 
-### 15. `AllowAmbiguousTypes`
+If a newtype deriving a type class and `DeriveAnyClass` is also enabled, both strategies will appear and give warning.
+
+Example
+```Haskell
+newtype ConfigException = ConfigException Text
+  deriving (Show, Exception)
+```
+`GeneralizedNewtypeDeriving` will pick `Text` instance of `Exception` for `ConfigException`.  But there is no `Text` instance.
+
+```Haskell
+{-# LANGUAGE DeriveAnyClass #-}
+newtype ConfigException = ConfigException Text
+  deriving (Show, Exception)
+```
+Both `GeneralizedNewtypeDeriving` and `DeriveAnyClass` are available for `ConfigException`.  It will give a warning which will fail the compilation if ghc-options is set to fail any warning.
+
+```Haskell
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+newtype ConfigException = ConfigException Text
+  deriving Show
+  deriving anyclass Exception -- Exception is derived using DeriveAnyClass
+```
+
+Remember that `GeneralizedNewtypeDeriving` and `DeriveAnyClass` have different behaviours on newtype.  
+```Haskell
+newtype TokenExchangeResponse = TokenExchangeResponse
+  { itemId :: ItemId } -- Suppose `ItemId` is `ToJSON`
+  deriving ToJSON
+```
+The json format will be the same as `ItemId`'s
+
+```Haskell
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+newtype TokenExchangeResponse = TokenExchangeResponse
+  { itemId :: ItemId }
+  deriving Generic 
+  deriving anyclass ToJSON
+```
+The json format will be
+```Json
+{"itemId":...}
+```
+
+### 14. `AllowAmbiguousTypes`
 The following code doesn't compile.
 ```Haskell
 class UnitName u where
   unitName :: String
 ```
-The reason the function `unitName` doesn't have an argument depending on the type variable `u` abstracted by the type class.  Enabling `AllowAmbiguousTypes` makes it compile.  However, the function still doesn't know the concrete type (or kind in general) when it's called.
+Because `unitName` doesn't have a type variable `u` abstracted by the type class, it can't tell which type whose `unitName` is called.  Enabling `AllowAmbiguousTypes` makes it compile.  But when the function is called, it still doesn't know what type the function refers to. 
 
-### 16. `TypeApplications`
+### 15. `TypeApplications`
 Even `UnitName` compiles by `AllowAmbiguousTypes`, we have to pass the type information to call `unitName`.  Enabling `TypeApplications` and using `@` allow us to do so.  E.g.
 ```Haskell
 unitName @F -- it will call `unitName` on `F` instance
@@ -1218,7 +1260,7 @@ unitName (Proxy :: Proxy F)
   * Using `@` is much simpler than tedious `(Proxy :: Proxy a)`.
   * Type information is after `@`.  Newbie can guess out the purpose more easily.
 
-### 17. `ConstraintKinds`
+### 16. `ConstraintKinds`
 `type Show' a = Show a` gets compilation error.  Fix it by enabling `ConstraintKinds`.  
 
 Usage:
@@ -1229,5 +1271,5 @@ Usage:
 
 This avoids repeating multiple type class requirement across function declaration.
 
-### 18. `DataKinds`
+### 17. `DataKinds`
 It has been explained in the section of type-level programming.
